@@ -1,9 +1,8 @@
 package ru.nsu.convoyeur
 
-import ru.nsu.convoyeur.api.channel.key.asChannelKey
-import ru.nsu.convoyeur.api.delegation.SinkNode
-import ru.nsu.convoyeur.api.delegation.SourceNode
-import ru.nsu.convoyeur.api.delegation.TransformNode
+import ru.nsu.convoyeur.api.declaration.SinkNode
+import ru.nsu.convoyeur.api.declaration.SourceNode
+import ru.nsu.convoyeur.api.declaration.TransformNode
 
 // declaration graph
 // source -> map -> sink
@@ -15,52 +14,62 @@ import ru.nsu.convoyeur.api.delegation.TransformNode
 //        -> map ->
 
 fun main() {
-    val sourceNode = SourceNode<Int>({
-        (1..10).forEach {
-            println("PRODUCING VALUE $it")
-            // TODO эти ChannelKey по-хорошему надо заменить на просто id нод
-            emit("map_chan".asChannelKey(), it)
-            emit("filter_chan".asChannelKey(), it)
-        }
-    })
-
-    val mapNode = TransformNode<Int, String>({
-        val inputChan = inputChannel("map_chan".asChannelKey())
-        inputChan?.forEach {
-            println("MAPPING VALUE $it")
-            emit("map_sink_chan".asChannelKey(), "Mapped [$it]")
-        }
-    })
-
-    val filterNode = TransformNode<Int, String>({
-        val inputChan = inputChannel("filter_chan".asChannelKey())
-        inputChan?.forEach {
-            println("FILTERING VALUE $it")
-            if (it % 2 == 0) {
-                emit("filter_sink_chan".asChannelKey(), "Filtered [$it]")
+    val sourceNode = SourceNode<Int>(
+        id = "source-id",
+        producer = {
+            (1..10).forEach {
+                println("PRODUCING VALUE $it")
+                emit("map-id", it)
+                emit("filter-id", it)
             }
+        })
+
+    val mapNode = TransformNode<Int, String>(
+        id = "map-id",
+        transform = {
+            val inputChan = inputChannel("source-id")
+            inputChan?.forEach {
+                println("MAPPING VALUE $it")
+                emit("sink-id", "Mapped [$it]")
+            }
+        })
+
+    val filterNode = TransformNode<Int, String>(
+        id = "filter-id",
+        transform = {
+            val inputChan = inputChannel("source-id")
+            inputChan?.forEach {
+                println("FILTERING VALUE $it")
+                if (it % 2 == 0) {
+                    emit("sink-id", "Filtered [$it]")
+                }
+            }
+        })
+
+    val sinkNode = SinkNode<String>(
+        id = "sink-id",
+        consumer = {
+            val mapChan = inputChannel("map-id")
+            val filterChan = inputChannel("sink-id")
+
+            // тут юзер волен задать джойн как ему угодно
+            // для простоты тут игрушечный пример для конечных стримов
+            mapChan?.forEach {
+                println("CONSUMING VALUE $it")
+            }
+
+            filterChan?.forEach {
+                println("CONSUMING VALUE $it")
+            }
+        })
+
+    sourceNode.outputNodes = listOf(
+        mapNode.apply {
+            outputNodes = listOf(sinkNode)
+        },
+
+        filterNode.apply {
+            outputNodes = listOf(sinkNode)
         }
-    })
-
-    val sinkNode = SinkNode<String>({
-        val mapChan = inputChannel("map_sink_chan".asChannelKey())
-        val filterChan = inputChannel("filter_sink_chan".asChannelKey())
-
-        // тут юзер волен задать джойн как ему угодно
-        // для простоты тут игрушечный пример для конечных стримов
-        mapChan?.forEach {
-            println("CONSUMING VALUE $it")
-        }
-
-        filterChan?.forEach {
-            println("CONSUMING VALUE $it")
-        }
-    })
-
-    mapNode.outputNodes = mapOf("".asChannelKey() to sinkNode)
-    filterNode.outputNodes = mapOf("".asChannelKey() to sinkNode)
-    sourceNode.outputNodes = mapOf(
-        "".asChannelKey() to mapNode,
-        "".asChannelKey() to filterNode,
     )
 }

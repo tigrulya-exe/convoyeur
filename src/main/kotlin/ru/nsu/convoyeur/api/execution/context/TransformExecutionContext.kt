@@ -1,19 +1,18 @@
 package ru.nsu.convoyeur.api.execution.context
 
 import ru.nsu.convoyeur.api.channel.DataChannel
-import ru.nsu.convoyeur.api.channel.key.ChannelKey
 
 interface TransformExecutionContext<S, D> : SourceExecutionContext<D>, SinkExecutionContext<S>
 
 class DefaultTransformExecutionContext<S, D>(
-    inputChannels: Map<ChannelKey, DataChannel<S>>,
-    outputChannels: Map<ChannelKey, DataChannel<D>>
+    inputChannels: Map<String, DataChannel<S>>,
+    outputChannels: Map<String, DataChannel<D>>
 ) : TransformExecutionContext<S, D> {
 
     private val sourceContext = DefaultSourceExecutionContext(outputChannels)
     private val sinkExecutionContext = DefaultSinkExecutionContext(inputChannels)
 
-    override fun inputChannel(key: ChannelKey) = sinkExecutionContext.inputChannel(key)
+    override fun inputChannel(nodeId: String) = sinkExecutionContext.inputChannel(nodeId)
 
-    override suspend fun emit(key: ChannelKey, value: D) = sourceContext.emit(key, value)
+    override suspend fun emit(nodeId: String, value: D) = sourceContext.emit(nodeId, value)
 }

@@ -1,17 +1,16 @@
 package ru.nsu.convoyeur.api.execution.context
 
 import ru.nsu.convoyeur.api.channel.DataChannel
-import ru.nsu.convoyeur.api.channel.key.ChannelKey
 
 interface SinkExecutionContext<V> {
-    fun inputChannel(key: ChannelKey): DataChannel<V>?
+    fun inputChannel(nodeId: String): DataChannel<V>?
 }
 
 class DefaultSinkExecutionContext<V>(
-    private val inputChannels: Map<ChannelKey, DataChannel<V>>
+    private val inputChannels: Map<String, DataChannel<V>>
 ) : SinkExecutionContext<V> {
 
-    override fun inputChannel(key: ChannelKey): DataChannel<V>? {
-        return inputChannels[key]
+    override fun inputChannel(nodeId: String): DataChannel<V>? {
+        return inputChannels[nodeId]
     }
 }

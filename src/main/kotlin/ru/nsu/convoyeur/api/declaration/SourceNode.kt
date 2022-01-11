@@ -1,9 +1,9 @@
-package ru.nsu.convoyeur.api.delegation
+package ru.nsu.convoyeur.api.declaration
 
-import ru.nsu.convoyeur.api.channel.key.ChannelKey
 import ru.nsu.convoyeur.api.execution.context.SourceExecutionContext
 
 open class SourceNode<V>(
+    override val id: String,
     val producer: suspend SourceExecutionContext<V>.() -> Unit,
-    var outputNodes: Map<ChannelKey, ConsumerNode<V>> = mapOf(),
+    override var outputNodes: List<ConsumerNode<V>> = listOf(),
 ) : ProducerNode<V>
