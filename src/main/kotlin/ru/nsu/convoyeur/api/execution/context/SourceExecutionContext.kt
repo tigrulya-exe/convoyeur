@@ -3,14 +3,17 @@ package ru.nsu.convoyeur.api.execution.context
 import ru.nsu.convoyeur.api.channel.DataChannel
 
 interface SourceExecutionContext<V> {
-    suspend fun emit(nodeId: String, value: V)
+    fun outputChannel(nodeId: String): DataChannel<V>?
+
+    fun addOutputChannel(nodeId: String, channel: DataChannel<V>)
 }
 
 class DefaultSourceExecutionContext<V>(
-    private val outputChannels: Map<String, DataChannel<V>>
+    private val outputChannels: MutableMap<String, DataChannel<V>>
 ) : SourceExecutionContext<V> {
+    override fun outputChannel(nodeId: String) = outputChannels[nodeId]
 
-    override suspend fun emit(nodeId: String, value: V) {
-        outputChannels[nodeId]?.put(value);
+    override fun addOutputChannel(nodeId: String, channel: DataChannel<V>) {
+        outputChannels[nodeId] = channel
     }
 }

@@ -3,6 +3,9 @@ package ru.nsu.convoyeur
 import ru.nsu.convoyeur.api.declaration.SinkNode
 import ru.nsu.convoyeur.api.declaration.SourceNode
 import ru.nsu.convoyeur.api.declaration.TransformNode
+import ru.nsu.convoyeur.api.declaration.emit
+import ru.nsu.convoyeur.api.execution.channel.KotlinChannelFactory
+import ru.nsu.convoyeur.api.execution.graph.transform.GraphTransformer
 
 // declaration graph
 // source -> map -> sink
@@ -72,4 +75,6 @@ fun main() {
             outputNodes = listOf(sinkNode)
         }
     )
+
+    GraphTransformer(KotlinChannelFactory()).transform(sourceNode)
 }
