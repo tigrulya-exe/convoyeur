@@ -1,8 +1,12 @@
 package ru.nsu.convoyeur
 
-import ru.nsu.convoyeur.api.declaration.SinkNode
-import ru.nsu.convoyeur.api.declaration.SourceNode
-import ru.nsu.convoyeur.api.declaration.TransformNode
+import ru.nsu.convoyeur.core.declaration.graph.SinkNode
+import ru.nsu.convoyeur.core.declaration.graph.SourceNode
+import ru.nsu.convoyeur.core.declaration.graph.TransformNode
+import ru.nsu.convoyeur.core.declaration.graph.emit
+import ru.nsu.convoyeur.core.channel.CoroutineDataChannelFactory
+import ru.nsu.convoyeur.api.execution.graph.transform.GraphTransformer
+import ru.nsu.convoyeur.core.execution.graph.DefaultGraphTransformer
 
 // declaration graph
 // source -> map -> sink
@@ -23,6 +27,17 @@ fun main() {
                 emit("filter-id", it)
             }
         })
+
+    val secondSourceNode = SourceNode<Int>(
+        id = "second-source-id",
+        producer = {
+            (20..30).forEach {
+                println("PRODUCING VALUE $it")
+                emit("map-id", it)
+                emit("filter-id", it)
+            }
+        })
+
 
     val mapNode = TransformNode<Int, String>(
         id = "map-id",
@@ -63,7 +78,8 @@ fun main() {
             }
         })
 
-    sourceNode.outputNodes = listOf(
+
+    val outputNodes = listOf(
         mapNode.apply {
             outputNodes = listOf(sinkNode)
         },
@@ -72,4 +88,11 @@ fun main() {
             outputNodes = listOf(sinkNode)
         }
     )
+
+    sourceNode.outputNodes = outputNodes
+    secondSourceNode.outputNodes = outputNodes
+
+    val executionSources = DefaultGraphTransformer(CoroutineDataChannelFactory())
+        .transform(listOf(sourceNode, secondSourceNode))
+    println(executionSources)
 }
