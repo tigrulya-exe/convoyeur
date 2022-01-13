@@ -1,5 +1,7 @@
-package ru.nsu.convoyeur.api.declaration
+package ru.nsu.convoyeur.core.declaration.graph
 
+import ru.nsu.convoyeur.api.declaration.GraphNode
+import ru.nsu.convoyeur.api.declaration.SourceGraphNode
 import ru.nsu.convoyeur.api.execution.context.SourceExecutionContext
 
 open class SourceNode<V>(

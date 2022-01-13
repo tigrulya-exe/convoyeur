@@ -1,8 +1,9 @@
-package ru.nsu.convoyeur.api.channel
+package ru.nsu.convoyeur.core.channel
 
 import kotlinx.coroutines.channels.Channel
+import ru.nsu.convoyeur.api.channel.DataChannel
 
-class KotlinDataChannel<V>(
+class CoroutineDataChannel<V>(
     private val delegate: Channel<V> = Channel()
 ) : DataChannel<V> {
     override suspend fun put(value: V) {
