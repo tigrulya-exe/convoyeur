@@ -8,5 +8,5 @@ class ExecutionGraphNodeImpl<S, D>(
     override val id: String,
     override val action: ContextEnrichedAction,
     override val context: MutableExecutionContext<S, D>,
-    override val neighbours: MutableMap<String, ExecutionGraphNode<D, *>> = mutableMapOf()
+    override val children: MutableMap<String, ExecutionGraphNode<D, *>> = mutableMapOf()
 ) : ExecutionGraphNode<S, D>

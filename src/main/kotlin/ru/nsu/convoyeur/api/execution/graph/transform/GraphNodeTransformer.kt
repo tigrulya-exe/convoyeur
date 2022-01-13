@@ -8,5 +8,5 @@ interface GraphNodeTransformer {
     fun <S, D> transform(
         node: GraphNode<S, D>,
         context: MutableExecutionContext<S, D>
-    ): ExecutionGraphNode<out S, out D>
+    ): ExecutionGraphNode<S, D>
 }

@@ -12,6 +12,8 @@ interface ConsumerExecutionContext<V> {
     fun inputChannel(nodeId: String): DataChannel<V>?
 }
 
+interface ExecutionContext<S, D>: SourceExecutionContext<D>, ConsumerExecutionContext<S>
+
 interface MutableSourceExecutionContext<V> : SourceExecutionContext<V> {
     var outputChannels: MutableMap<String, DataChannel<V>>
 
@@ -32,4 +34,6 @@ interface MutableConsumerExecutionContext<V> : ConsumerExecutionContext<V> {
     override fun inputChannel(nodeId: String) = inputChannels[nodeId]
 }
 
-interface MutableExecutionContext<S, D> : MutableSourceExecutionContext<D>, MutableConsumerExecutionContext<S>
+interface MutableExecutionContext<S, D> : MutableSourceExecutionContext<D>,
+    MutableConsumerExecutionContext<S>,
+    ExecutionContext<S, D>

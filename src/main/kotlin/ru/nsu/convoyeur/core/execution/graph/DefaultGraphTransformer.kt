@@ -28,6 +28,18 @@ class DefaultGraphTransformer(
             .map { it as ExecutionGraphNode<Nothing, V> }
     }
 
+    /**
+     * Как обходим граф:
+     * Это алгоритм обхода в ширину ориентированного графа, начиная с вершин, указанных пользователем.
+     * Обработка вершины == трансформация DeclarationGraphNode<S, V> в ExecutionGraphNode<S, V>:
+     *  1. Создаем выходные каналы для данной ноды и добавляем их как outputChannels в ExecutionContext той же ноды
+     *  2. Каждый такой выходной канал добавляем как inputChannel контекста соответствующей дочерней ноды
+     *     (который достаем из executionContexts) и обновляем данный контекст в executionContexts
+     *  3. Обогащаем определенную пользователем функцию DeclarationGraphNode ExecutionContextом обрабатываемой ноды
+     *     и создаем экземпляр ExecutionGraphNode
+     *  4. В случае если у обрабатываемой ноды есть родительские узлы, то добавляем ее в ExecutionContext.children родителя
+     *
+     */
     private fun traverseGraph(sources: List<SourceNode<*>>): Map<String, ExecutionGraphNode<*, *>> {
         // преобразованные ноды
         val traversedNodes = mutableMapOf<String, ExecutionGraphNode<*, *>>()
@@ -80,12 +92,8 @@ class DefaultGraphTransformer(
         context?.let {
             context.inputChannels
                 .keys
-                .mapNotNull {
-                    nodes[it] as? ExecutionGraphNode<*, S>
-                }
-                .forEach {
-                    it.neighbours[child.id] = child
-                }
+                .mapNotNull { nodes[it] as? ExecutionGraphNode<*, S> }
+                .forEach { it.children[child.id] = child }
         }
     }
 
