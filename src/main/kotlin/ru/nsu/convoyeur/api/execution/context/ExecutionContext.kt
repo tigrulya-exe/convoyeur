@@ -1,23 +1,23 @@
 package ru.nsu.convoyeur.api.execution.context
 
-import ru.nsu.convoyeur.api.channel.DataChannel
+import kotlinx.coroutines.channels.Channel
 
 // иммутабельные интерфесы предоставляются юзеру
 // для использования в выполняемых на нодах функциях
 interface SourceExecutionContext<V> {
-    fun outputChannel(nodeId: String): DataChannel<V>?
+    fun outputChannel(nodeId: String): Channel<V>?
 }
 
 interface ConsumerExecutionContext<V> {
-    fun inputChannel(nodeId: String): DataChannel<V>?
+    fun inputChannel(nodeId: String): Channel<V>?
 }
 
 interface ExecutionContext<S, D>: SourceExecutionContext<D>, ConsumerExecutionContext<S>
 
 interface MutableSourceExecutionContext<V> : SourceExecutionContext<V> {
-    var outputChannels: MutableMap<String, DataChannel<V>>
+    var outputChannels: MutableMap<String, Channel<V>>
 
-    fun addOutputChannel(nodeId: String, channel: DataChannel<V>) {
+    fun addOutputChannel(nodeId: String, channel: Channel<V>) {
         outputChannels[nodeId] = channel
     }
 
@@ -25,9 +25,9 @@ interface MutableSourceExecutionContext<V> : SourceExecutionContext<V> {
 }
 
 interface MutableConsumerExecutionContext<V> : ConsumerExecutionContext<V> {
-    var inputChannels: MutableMap<String, DataChannel<V>>
+    var inputChannels: MutableMap<String, Channel<V>>
 
-    fun addInputChannel(nodeId: String, channel: DataChannel<V>) {
+    fun addInputChannel(nodeId: String, channel: Channel<V>) {
         inputChannels[nodeId] = channel
     }
 

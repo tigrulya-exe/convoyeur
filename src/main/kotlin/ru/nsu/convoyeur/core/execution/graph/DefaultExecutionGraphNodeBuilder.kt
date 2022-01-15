@@ -4,13 +4,13 @@ import ru.nsu.convoyeur.api.declaration.GraphNode
 import ru.nsu.convoyeur.api.execution.context.MutableExecutionContext
 import ru.nsu.convoyeur.api.execution.graph.ContextEnrichedAction
 import ru.nsu.convoyeur.api.execution.graph.ExecutionGraphNode
-import ru.nsu.convoyeur.api.execution.graph.transform.GraphNodeTransformer
+import ru.nsu.convoyeur.api.execution.graph.transform.ExecutionGraphNodeBuilder
 import ru.nsu.convoyeur.core.declaration.graph.SinkNode
 import ru.nsu.convoyeur.core.declaration.graph.SourceNode
 import ru.nsu.convoyeur.core.declaration.graph.TransformNode
 
-class DefaultGraphNodeTransformer : GraphNodeTransformer {
-    override fun <S, D> transform(
+class DefaultExecutionGraphNodeBuilder : ExecutionGraphNodeBuilder {
+    override fun <S, D> build(
         node: GraphNode<S, D>,
         context: MutableExecutionContext<S, D>
     ): ExecutionGraphNode<S, D> {

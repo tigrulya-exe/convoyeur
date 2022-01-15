@@ -1,31 +1,31 @@
 package ru.nsu.convoyeur.core.execution.graph
 
-import ru.nsu.convoyeur.api.channel.DataChannel
-import ru.nsu.convoyeur.api.channel.DataChannelFactory
+import kotlinx.coroutines.channels.Channel
+import ru.nsu.convoyeur.api.channel.ChannelFactory
 import ru.nsu.convoyeur.api.declaration.GraphNode
+import ru.nsu.convoyeur.api.declaration.SourceGraphNode
 import ru.nsu.convoyeur.api.execution.context.MutableExecutionContext
 import ru.nsu.convoyeur.api.execution.graph.ExecutionGraphNode
-import ru.nsu.convoyeur.api.execution.graph.transform.GraphNodeTransformer
-import ru.nsu.convoyeur.api.execution.graph.transform.GraphTransformer
-import ru.nsu.convoyeur.core.channel.CoroutineDataChannelFactory
-import ru.nsu.convoyeur.core.declaration.graph.SourceNode
+import ru.nsu.convoyeur.api.execution.graph.transform.ExecutionGraphBuilder
+import ru.nsu.convoyeur.api.execution.graph.transform.ExecutionGraphNodeBuilder
+import ru.nsu.convoyeur.core.channel.CoroutineChannelFactory
 import ru.nsu.convoyeur.core.execution.context.NodeExecutionContext
 import ru.nsu.convoyeur.util.pop
 import ru.nsu.convoyeur.util.withDefaultCompute
 
 @Suppress("UNCHECKED_CAST")
-class DefaultGraphTransformer(
-    private val channelFactory: DataChannelFactory = CoroutineDataChannelFactory(),
-    private val nodesTransformer: GraphNodeTransformer = DefaultGraphNodeTransformer()
-) : GraphTransformer {
+class DefaultExecutionGraphBuilder(
+    private val channelFactory: ChannelFactory = CoroutineChannelFactory(),
+    private val nodesTransformer: ExecutionGraphNodeBuilder = DefaultExecutionGraphNodeBuilder()
+) : ExecutionGraphBuilder {
 
-    override fun <V> transform(source: SourceNode<V>) = transform(listOf(source))[0]
+    override fun <V> build(source: SourceGraphNode<V>) = build(listOf(source))
 
-    override fun <V> transform(sources: List<SourceNode<V>>): List<ExecutionGraphNode<Nothing, V>> {
-        val executionNodes = traverseGraph(sources)
-        return sources.map { it.id }
-            .map { executionNodes[it] }
-            .map { it as ExecutionGraphNode<Nothing, V> }
+    override fun <V> build(sources: List<SourceGraphNode<V>>): ExecutionGraph {
+        return ExecutionGraph(
+            nodes = traverseGraph(sources),
+            sourceIds = sources.map { it.id }
+        )
     }
 
     /**
@@ -40,7 +40,7 @@ class DefaultGraphTransformer(
      *  4. В случае если у обрабатываемой ноды есть родительские узлы, то добавляем ее в ExecutionContext.children родителя
      *
      */
-    private fun traverseGraph(sources: List<SourceNode<*>>): Map<String, ExecutionGraphNode<*, *>> {
+    private fun traverseGraph(sources: List<SourceGraphNode<*>>): Map<String, ExecutionGraphNode<*, *>> {
         // преобразованные ноды
         val traversedNodes = mutableMapOf<String, ExecutionGraphNode<*, *>>()
         // выделены в отдельную мапу, т.к. родители создают контексты для еще не созданных детей
@@ -63,25 +63,24 @@ class DefaultGraphTransformer(
             }
         }
 
-        return traversedNodes;
+        return traversedNodes
     }
 
     private fun <S, D> transformNode(
         node: GraphNode<S, D>,
         executionContexts: MutableMap<String, MutableExecutionContext<*, *>>
     ): ExecutionGraphNode<out S, out D> {
-        val outputChannels = mutableMapOf<String, DataChannel<D>>()
+        val outputChannels = mutableMapOf<String, Channel<D>>()
 
         for (child in node.outputNodes) {
             val childContext = executionContexts[child.id] as NodeExecutionContext<D, Any>
-            channelFactory.createChannel<D>().apply {
-                outputChannels[child.id] = this
-                childContext.addInputChannel(node.id, this)
-            }
+            val channel = channelFactory.createChannel<D>(child.bufferSize)
+            outputChannels[child.id] = channel
+            childContext.addInputChannel(node.id, channel)
         }
 
         val context = executionContexts[node.id] as NodeExecutionContext<S, D>
-        return nodesTransformer.transform(node, context.also { it.outputChannels = outputChannels })
+        return nodesTransformer.build(node, context.also { it.outputChannels = outputChannels })
     }
 
     private fun <S, D> addChildLinkToParent(

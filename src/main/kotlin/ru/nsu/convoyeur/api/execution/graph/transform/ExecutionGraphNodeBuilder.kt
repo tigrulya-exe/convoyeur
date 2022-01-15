@@ -4,8 +4,8 @@ import ru.nsu.convoyeur.api.declaration.GraphNode
 import ru.nsu.convoyeur.api.execution.context.MutableExecutionContext
 import ru.nsu.convoyeur.api.execution.graph.ExecutionGraphNode
 
-interface GraphNodeTransformer {
-    fun <S, D> transform(
+interface ExecutionGraphNodeBuilder {
+    fun <S, D> build(
         node: GraphNode<S, D>,
         context: MutableExecutionContext<S, D>
     ): ExecutionGraphNode<S, D>
