@@ -4,36 +4,26 @@ import kotlinx.coroutines.channels.Channel
 
 // иммутабельные интерфесы предоставляются юзеру
 // для использования в выполняемых на нодах функциях
-interface SourceExecutionContext<V> {
-    fun outputChannel(nodeId: String): Channel<V>?
+interface ExecutionContext {
+    val isActive: Boolean
 }
 
-interface ConsumerExecutionContext<V> {
-    fun inputChannel(nodeId: String): Channel<V>?
+interface SourceExecutionContext<V> : ExecutionContext {
+    fun outputChannels(): Map<String, Channel<V>>
+
+    fun outputChannel(nodeId: String) = outputChannels()[nodeId]
 }
 
-interface ExecutionContext<S, D>: SourceExecutionContext<D>, ConsumerExecutionContext<S>
+interface ConsumerExecutionContext<V> : ExecutionContext {
+    fun inputChannels(): Map<String, Channel<V>>
 
-interface MutableSourceExecutionContext<V> : SourceExecutionContext<V> {
-    var outputChannels: MutableMap<String, Channel<V>>
+    fun inputChannel(nodeId: String) = inputChannels()[nodeId]
 
-    fun addOutputChannel(nodeId: String, channel: Channel<V>) {
-        outputChannels[nodeId] = channel
-    }
-
-    override fun outputChannel(nodeId: String) = outputChannels[nodeId]
+    val hasOpenInputChannels: Boolean
+        get() = inputChannels().values
+            .map { !it.isClosedForReceive }
+            .reduce(Boolean::or)
 }
 
-interface MutableConsumerExecutionContext<V> : ConsumerExecutionContext<V> {
-    var inputChannels: MutableMap<String, Channel<V>>
+interface NodeExecutionContext<S, D> : SourceExecutionContext<D>, ConsumerExecutionContext<S>
 
-    fun addInputChannel(nodeId: String, channel: Channel<V>) {
-        inputChannels[nodeId] = channel
-    }
-
-    override fun inputChannel(nodeId: String) = inputChannels[nodeId]
-}
-
-interface MutableExecutionContext<S, D> : MutableSourceExecutionContext<D>,
-    MutableConsumerExecutionContext<S>,
-    ExecutionContext<S, D>

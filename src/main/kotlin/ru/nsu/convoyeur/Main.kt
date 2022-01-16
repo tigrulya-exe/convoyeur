@@ -1,13 +1,12 @@
 package ru.nsu.convoyeur
 
 import kotlinx.coroutines.channels.consumeEach
-import ru.nsu.convoyeur.core.channel.CoroutineChannelFactory
+import kotlinx.coroutines.selects.select
 import ru.nsu.convoyeur.core.declaration.graph.SinkNode
 import ru.nsu.convoyeur.core.declaration.graph.SourceNode
 import ru.nsu.convoyeur.core.declaration.graph.TransformNode
 import ru.nsu.convoyeur.core.declaration.graph.emit
 import ru.nsu.convoyeur.core.execution.DefaultExecutionManager
-import ru.nsu.convoyeur.core.execution.graph.DefaultExecutionGraphBuilder
 
 // declaration graph
 // source -> map -> sink
@@ -22,11 +21,13 @@ fun main() {
     val sourceNode = SourceNode<Int>(
         id = "source-id",
         producer = {
-            (1..10).forEach {
-                println("PRODUCING VALUE $it")
+            repeat(10) {
+                println("[SOURCE] Send to map $it")
                 emit("map-id", it)
+                println("[SOURCE] Send to filter $it")
                 emit("filter-id", it)
             }
+            println("[SOURCE] FINISH")
         })
 
     val secondSourceNode = SourceNode<Int>(
@@ -35,52 +36,62 @@ fun main() {
             (20..30).forEach {
                 println("PRODUCING VALUE $it")
                 emit("map-id", it)
-                emit("filter-id", it)
+//                emit("filter-id", it)
             }
         })
 
-
     val mapNode = TransformNode<Int, String>(
         id = "map-id",
-        bufferSize = 4,
+//        bufferSize = 4,
         transform = {
             val inputChan = inputChannel("source-id")
             inputChan?.consumeEach {
-                println("MAPPING VALUE $it")
+                println("[MAP] Sending to sink $it")
                 emit("sink-id", "Mapped [$it]")
             }
+
+            inputChannel("second-source-id")?.consumeEach {
+                println("[MAP-2] Sending to sink $it")
+                emit("sink-id", "Mapped-2 [$it]")
+            }
+            println("[MAP] FINISH")
         })
 
     val filterNode = TransformNode<Int, String>(
         id = "filter-id",
-        bufferSize = 6,
+//        bufferSize = 6,
         transform = {
             val inputChan = inputChannel("source-id")
             inputChan?.consumeEach {
-                println("FILTERING VALUE $it")
+                println("[FILTER] Get $it")
                 if (it % 2 == 0) {
+                    println("[FILTER] Sending to sink $it")
                     emit("sink-id", "Filtered [$it]")
                 }
             }
+            println("[FILTER] FINISH")
         })
 
     val sinkNode = SinkNode<String>(
         id = "sink-id",
-        bufferSize = 16,
+//        bufferSize = 16,
         consumer = {
-            val mapChan = inputChannel("map-id")
-            val filterChan = inputChannel("sink-id")
-
             // тут юзер волен задать джойн как ему угодно
             // для простоты тут игрушечный пример для конечных стримов
-            mapChan?.consumeEach {
-                println("CONSUMING VALUE $it")
 
+            while (isActive && hasOpenInputChannels) {
+                val result = select<Pair<String, String?>> {
+                    inputChannels()
+                        .filter { !it.value.isClosedForReceive }
+                        .forEach {
+                            it.value.onReceiveCatching { result ->
+                                it.key to result.getOrNull()
+                            }
+                        }
+                }
+                println("[SINK] Get from '${result.first}': ${result.second}")
             }
-
-            filterChan?.consumeEach {
-                println("CONSUMING VALUE $it")
-            }
+            println("[SINK] FINISH")
         })
 
 
@@ -97,8 +108,11 @@ fun main() {
     sourceNode.outputNodes = outputNodes
     secondSourceNode.outputNodes = outputNodes
 
-    val executionGraph = DefaultExecutionGraphBuilder(CoroutineChannelFactory())
-        .build(listOf(sourceNode, secondSourceNode))
+//    val executionGraph = DefaultExecutionGraphBuilder(CoroutineChannelFactory())
+//        .build(listOf(
+//            sourceNode,
+////            secondSourceNode
+//        ))
 
-    DefaultExecutionManager().execute(listOf(sourceNode))
+    DefaultExecutionManager().execute(listOf(sourceNode, secondSourceNode))
 }
