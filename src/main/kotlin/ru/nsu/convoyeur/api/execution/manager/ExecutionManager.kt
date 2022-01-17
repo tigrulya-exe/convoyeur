@@ -1,7 +1,10 @@
 package ru.nsu.convoyeur.api.execution.manager
 
+import kotlinx.coroutines.Job
 import ru.nsu.convoyeur.api.declaration.SourceGraphNode
 
 interface ExecutionManager {
-    fun <V> execute(sources: List<SourceGraphNode<V>>): JobHandle
+    fun <V> execute(sources: List<SourceGraphNode<V>>)
+
+    fun <V> executeAsync(sources: List<SourceGraphNode<V>>): Job
 }

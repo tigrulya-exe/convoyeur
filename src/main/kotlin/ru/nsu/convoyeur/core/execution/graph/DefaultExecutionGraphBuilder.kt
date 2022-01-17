@@ -1,7 +1,8 @@
 package ru.nsu.convoyeur.core.execution.graph
 
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.SendChannel
 import ru.nsu.convoyeur.api.channel.ChannelFactory
+import ru.nsu.convoyeur.api.channel.ChannelFactory.Companion.DEFAULT_BUFF_SIZE
 import ru.nsu.convoyeur.api.declaration.GraphNode
 import ru.nsu.convoyeur.api.declaration.SourceGraphNode
 import ru.nsu.convoyeur.api.execution.context.MutableExecutionContext
@@ -52,7 +53,11 @@ class DefaultExecutionGraphBuilder(
         while (traverseQueue.isNotEmpty()) {
             println(traverseQueue.map { node -> node.id })
             val node = traverseQueue.pop()
-            traverseQueue.addAll(node.outputNodes)
+            traverseQueue.addAll(
+                // защита от циклов
+                node.outputNodes
+                    .filter { !traversedNodes.contains(it.id) }
+            )
             traversedNodes[node.id] = transformNode(node, executionContexts).also {
                 // добавляем у родителя ссылку на только что трансформированную ноду
                 addChildLinkToParent(
@@ -70,11 +75,13 @@ class DefaultExecutionGraphBuilder(
         node: GraphNode<S, D>,
         executionContexts: MutableMap<String, MutableExecutionContext<*, *>>
     ): ExecutionGraphNode<out S, out D> {
-        val outputChannels = mutableMapOf<String, Channel<D>>()
+        val outputChannels = mutableMapOf<String, SendChannel<D>>()
 
         for (child in node.outputNodes) {
             val childContext = executionContexts[child.id] as NodeExecutionContext<D, Any>
-            val channel = channelFactory.createChannel<D>(child.bufferSize)
+            val channel = channelFactory.createChannel<D>(
+                child.bufferSizes.getOrDefault(node.id, DEFAULT_BUFF_SIZE)
+            )
             outputChannels[child.id] = channel
             childContext.addInputChannel(node.id, channel)
         }

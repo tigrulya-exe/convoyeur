@@ -6,7 +6,7 @@ interface GraphNode<S, D> {
 }
 
 interface ConsumerNode<S, D> : GraphNode<S, D> {
-    val bufferSize: Int
+    val bufferSizes: Map<String, Int>
 }
 
 interface SourceGraphNode<V> : GraphNode<Nothing, V>

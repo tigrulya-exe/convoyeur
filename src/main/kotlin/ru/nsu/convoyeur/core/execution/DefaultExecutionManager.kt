@@ -1,9 +1,6 @@
 package ru.nsu.convoyeur.core.execution
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import ru.nsu.convoyeur.api.declaration.SourceGraphNode
 import ru.nsu.convoyeur.api.execution.graph.ExecutionGraphNode
 import ru.nsu.convoyeur.api.execution.graph.transform.ExecutionGraphBuilder
@@ -19,14 +16,18 @@ class DefaultExecutionManager(
     private val executionGraphs = mutableMapOf<String, ExecutionGraph>()
     private val jobs = mutableMapOf<String, MutableMap<String, Job>>()
 
-    override fun <V> execute(sources: List<SourceGraphNode<V>>): JobHandle {
-        val executionGraph = executionGraphBuilder.build(sources)
-        return execute(executionGraph)
+    override fun <V> execute(sources: List<SourceGraphNode<V>>) = runBlocking {
+        execute(this, sources)
     }
 
-    private fun execute(executionGraph: ExecutionGraph): JobHandle = runBlocking {
+    override fun <V> executeAsync(sources: List<SourceGraphNode<V>>): Job = GlobalScope.launch {
+        execute(this, sources)
+    }
+
+    private suspend fun <V> execute(scope: CoroutineScope, sources: List<SourceGraphNode<V>>) {
+        val executionGraph = executionGraphBuilder.build(sources)
         val nodeJobs = executionGraph.nodes
-            .mapValues { launchNode(this, it.value) }
+            .mapValues { launchNode(scope, it.value) }
             .toMutableMap()
 
         JobHandle().also {
@@ -35,14 +36,21 @@ class DefaultExecutionManager(
         }
     }
 
-    private suspend fun launchNode(scope: CoroutineScope, node: ExecutionGraphNode<*, *>) = scope.launch {
-        try {
-            node.context.isActive = true
-            node.action()
-        } finally {
-            node.context.isActive = false
-            node.context.outputChannels.values.forEach {
-                it.close()
+    private suspend fun launchNode(
+        scope: CoroutineScope,
+        node: ExecutionGraphNode<*, *>
+    ) = scope.launch(Dispatchers.Default) {
+        with(node) {
+            try {
+                context.isActive = true
+                action()
+//            } catch (e: Exception) {
+//                println("EXCEPTION: $e")
+            } finally {
+                context.isActive = false
+                context.outputChannels.values.forEach {
+                    it.close()
+                }
             }
         }
     }
