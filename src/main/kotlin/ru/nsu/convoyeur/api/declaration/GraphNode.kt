@@ -1,18 +1,12 @@
 package ru.nsu.convoyeur.api.declaration
 
+import ru.nsu.convoyeur.api.execution.context.ExecutionContext
+
 interface GraphNode<S, D> {
     val id: String
-    var outputNodes: List<ConsumerNode<D, *>>
+    var outputNodes: List<ConsumerGraphNode<D, *>>
 }
 
-interface ConsumerNode<S, D> : GraphNode<S, D> {
-    val bufferSizes: Map<String, Int>
-}
-
-interface SourceGraphNode<V> : GraphNode<Nothing, V>
-
-interface SinkGraphNode<V> : ConsumerNode<V, Nothing> {
-    override var outputNodes: List<ConsumerNode<Nothing, *>>
-        get() = emptyList()
-        set(_) {}
+interface StatefulGraphNode<S, D, C : ExecutionContext> : GraphNode<S, D> {
+    val action: suspend C.() -> Unit
 }

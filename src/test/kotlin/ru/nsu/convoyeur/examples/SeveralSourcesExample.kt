@@ -13,7 +13,7 @@ class SeveralSourcesExample : ConvoyeurExample<Int>() {
     override fun getDeclarationGraph(): List<SourceGraphNode<Int>> {
         val sourceNode = SourceNode<Int>(
             id = "source-id",
-            producer = {
+            action = {
                 repeat(10) {
                     println("[SOURCE] Send to map $it")
                     emit("map-id", it)
@@ -23,7 +23,7 @@ class SeveralSourcesExample : ConvoyeurExample<Int>() {
 
         val secondSourceNode = SourceNode<Int>(
             id = "second-source-id",
-            producer = {
+            action = {
                 (20..30).forEach {
                     println("[SOURCE-2] Send to map $it")
                     emit("map-id", it)
@@ -38,7 +38,7 @@ class SeveralSourcesExample : ConvoyeurExample<Int>() {
                 "source-id" to 4,
                 "second-source-id" to 2
             ),
-            transform = {
+            action = {
                 val inputChan = inputChannel("source-id")
                 inputChan?.consumeEach {
                     println("[MAP] Sending to sink $it")
@@ -53,7 +53,7 @@ class SeveralSourcesExample : ConvoyeurExample<Int>() {
 
         val filterNode = StatefulTransformNode<Int, String>(
             id = "filter-id",
-            transform = {
+            action = {
                 println("[FILTER] ${Thread.currentThread().name}")
                 val inputChan = inputChannel("source-id")
                 inputChan?.consumeEach {
@@ -67,7 +67,7 @@ class SeveralSourcesExample : ConvoyeurExample<Int>() {
 
         val sinkNode = StatefulSinkNode<String>(
             id = "sink-id",
-            consumer = {
+            action = {
                 // тут юзер волен задать джойн как ему угодно
                 // для простоты тут игрушечный пример для конечных стримов
 

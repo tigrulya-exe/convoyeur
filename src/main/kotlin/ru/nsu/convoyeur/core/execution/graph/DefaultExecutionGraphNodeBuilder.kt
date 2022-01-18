@@ -2,12 +2,14 @@ package ru.nsu.convoyeur.core.execution.graph
 
 import kotlinx.coroutines.selects.select
 import ru.nsu.convoyeur.api.declaration.GraphNode
-import ru.nsu.convoyeur.api.execution.context.MutableConsumerExecutionContext
+import ru.nsu.convoyeur.api.declaration.StatefulGraphNode
+import ru.nsu.convoyeur.api.declaration.StatelessConsumerNode
+import ru.nsu.convoyeur.api.execution.context.ConsumerExecutionContext
+import ru.nsu.convoyeur.api.execution.context.ExecutionContext
 import ru.nsu.convoyeur.api.execution.context.MutableExecutionContext
 import ru.nsu.convoyeur.api.execution.graph.ContextEnrichedAction
 import ru.nsu.convoyeur.api.execution.graph.ExecutionGraphNode
 import ru.nsu.convoyeur.api.execution.graph.transform.ExecutionGraphNodeBuilder
-import ru.nsu.convoyeur.core.declaration.graph.*
 
 class DefaultExecutionGraphNodeBuilder : ExecutionGraphNodeBuilder {
     override fun <S, D> build(
@@ -26,33 +28,43 @@ class DefaultExecutionGraphNodeBuilder : ExecutionGraphNodeBuilder {
         context: MutableExecutionContext<S, D>
     ): ContextEnrichedAction {
         return when (node) {
-            is SourceNode -> suspend { node.producer(context) }
-            is StatefulSinkNode -> suspend { node.consumer(context) }
-            is StatefulTransformNode -> suspend { node.transform(context) }
-            is SinkNode -> wrapWithSelect(context, node.callback)
-            is TransformNode -> wrapWithSelect(context, node.callback)
+            is StatefulGraphNode<S, D, *> -> wrapStatefulAction(node, context)
+            is StatelessConsumerNode<S, D, *> -> wrapStatelessAction(node, context)
             else -> throw RuntimeException("Maybe turn GraphNode to sealed class?")
         }
     }
 
-    private fun <E : MutableConsumerExecutionContext<S>, S> wrapWithSelect(
-        context: MutableConsumerExecutionContext<S>,
-        action: suspend E.(String, S?) -> Unit
-    ): ContextEnrichedAction = {
-        with(context) {
-            while (isActive && hasOpenInputChannels) {
-                val inputPair = select<Pair<String, S?>> {
+    private fun <E : ExecutionContext, S, D> wrapStatefulAction(
+        node: StatefulGraphNode<S, D, E>,
+        context: MutableExecutionContext<S, *>,
+    ): ContextEnrichedAction = suspend {
+        node.action(context as E)
+    }
+
+    private fun <E : ConsumerExecutionContext<S>, S> wrapStatelessAction(
+        node: StatelessConsumerNode<S, *, E>,
+        context: MutableExecutionContext<S, *>,
+    ): ContextEnrichedAction = suspend {
+        with(context as E) {
+            val openChannels = HashSet(context.inputChannels.keys)
+            while (isActive && openChannels.isNotEmpty()) {
+                val channelNameValue = select<Pair<String, S?>> {
                     context.inputChannels
-                        .filter { !it.value.isClosedForReceive }
+                        .filter { openChannels.contains(it.key) }
                         .forEach {
                             it.value.onReceiveCatching { result ->
                                 it.key to result.getOrNull()
                             }
                         }
                 }
-                action(context as E, inputPair.first, inputPair.second)
+
+                if (channelNameValue.second == null) {
+                    openChannels.remove(channelNameValue.first)
+                    node.onChannelClose(context, channelNameValue.first)
+                    continue
+                }
+                node.action(context, channelNameValue.first, channelNameValue.second!!)
             }
         }
     }
-
 }

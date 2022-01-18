@@ -20,7 +20,7 @@ class CycleExample : ConvoyeurExample<String>() {
 
         val mapNode = StatefulTransformNode<String, String>(
             id = "map1",
-            transform = {
+            action = {
                 val sourceInputChan = inputChannel(sourceNode.id)
                 val map3InputChan = inputChannel("map3")
 
@@ -49,7 +49,7 @@ class CycleExample : ConvoyeurExample<String>() {
 
         val mapNode2 = StatefulTransformNode<String, String>(
             id = "map2",
-            transform = {
+            action = {
                 val inputChannel = inputChannel()
                 inputChannel?.consumeEach {
                     println("[map2] get $it from map")
@@ -59,7 +59,7 @@ class CycleExample : ConvoyeurExample<String>() {
 
         val mapNode3 = StatefulTransformNode<String, String>(
             id = "map3",
-            transform = {
+            action = {
                 val inputChannel = inputChannel()
                 inputChannel?.consumeEach {
                     emit("MAP3[$it]")
@@ -68,7 +68,7 @@ class CycleExample : ConvoyeurExample<String>() {
 
         val sinkNode = StatefulSinkNode<String>(
             id = "sink",
-            consumer = {
+            action = {
                 val inputChannel = inputChannel()
                 inputChannel?.consumeEach {
                     println("sink - $it")

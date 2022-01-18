@@ -9,10 +9,11 @@ import java.lang.RuntimeException
 
 class ErrorHandlingExample : ConvoyeurExample<String>() {
 
+    //TODO: WIP
     override fun getDeclarationGraph(): List<SourceGraphNode<String>> {
         val source = SourceNode<String>(
             id = "",
-            producer =  {
+            action =  {
                 repeat(10) {
                     emit("$it")
                 }
@@ -22,7 +23,7 @@ class ErrorHandlingExample : ConvoyeurExample<String>() {
 
         val sinkNode = StatefulSinkNode<String>(
             id = "sink",
-            consumer = {
+            action = {
                 val inputChannel = inputChannel()
                 inputChannel?.consumeEach {
                     println("sink - $it")

@@ -13,7 +13,7 @@ class LinearGraphExample : ConvoyeurExample<Int>() {
     override fun getDeclarationGraph(): List<SourceGraphNode<Int>> {
         val sourceNode = SourceNode<Int>(
             id = "source-id",
-            producer = {
+            action = {
                 repeat(10) {
                     emit("map-id", it)
                     emit("filter-id", it)
@@ -23,7 +23,7 @@ class LinearGraphExample : ConvoyeurExample<Int>() {
 
         val mapNode = StatefulTransformNode<Int, String>(
             id = "map-id",
-            transform = {
+            action = {
                 val inputChan = inputChannel("source-id")
                 inputChan?.consumeEach {
                     emit("sink-id", "Mapped [$it]")
@@ -34,7 +34,7 @@ class LinearGraphExample : ConvoyeurExample<Int>() {
 
         val filterNode = StatefulTransformNode<Int, String>(
             id = "filter-id",
-            transform = {
+            action = {
                 val inputChan = inputChannel("source-id")
                 inputChan?.consumeEach {
                     if (it % 2 == 0) {
@@ -47,7 +47,7 @@ class LinearGraphExample : ConvoyeurExample<Int>() {
 
         val sinkNode = StatefulSinkNode<String>(
             id = "sink-id",
-            consumer = {
+            action = {
                 while (isActive && hasOpenInputChannels) {
                     val result = select<Pair<String, String?>> {
                         inputChannels()

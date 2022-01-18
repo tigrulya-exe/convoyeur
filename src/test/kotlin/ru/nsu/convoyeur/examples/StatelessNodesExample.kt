@@ -12,27 +12,28 @@ class StatelessNodesExample : ConvoyeurExample<Int>() {
 
         val filterNode = TransformNode<Int, Int>(
             id = "filter",
-            callback = { _, value ->
-                if (value?.rem(2) == 0) {
+            action = { _, value ->
+                if (value.rem(2) == 0) {
                     emit(value)
                 }
-            }
+            },
+            onChannelClose = { println("[filter] channel $it closed") }
         )
 
         val mapNode = TransformNode<Int, String>(
             id = "map",
-            callback = { _, value ->
-                value?.let {
-                    emit("Mapped[$it]")
-                }
-            }
+            action = { _, value ->
+                emit("Mapped[$value]")
+            },
+            onChannelClose = { println("[map] channel $it closed") }
         )
 
         val sinkNode = SinkNode<String>(
             id = "sink",
-            callback = { channelName, value ->
+            action = { channelName, value ->
                 println("[sink] Get '$value' from channel '$channelName'")
-            }
+            },
+            onChannelClose = { println("[sink] channel $it closed") }
         )
 
         sourceNode.outputNodes = listOf(filterNode)
