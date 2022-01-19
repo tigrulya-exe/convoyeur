@@ -23,6 +23,9 @@ class LinearGraphExample : ConvoyeurExample<Int>() {
 
         val mapNode = StatefulTransformNode<Int, String>(
             id = "map-id",
+            bufferSizes = mapOf(
+                "source-id" to 2
+            ),
             action = {
                 val inputChan = inputChannel("source-id")
                 inputChan?.consumeEach {

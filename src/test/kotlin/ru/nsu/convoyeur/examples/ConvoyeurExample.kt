@@ -25,10 +25,6 @@ abstract class ConvoyeurExample<S> {
             println("Task completed")
         }
 
-        handle.invokeOnCompletion {
-            println("Task completed")
-        }
-
         handle.join()
     }
 

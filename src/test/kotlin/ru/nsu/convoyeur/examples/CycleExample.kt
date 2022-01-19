@@ -1,13 +1,10 @@
 package ru.nsu.convoyeur.examples
 
-import kotlinx.coroutines.channels.consumeEach
-import kotlinx.coroutines.selects.select
 import ru.nsu.convoyeur.api.declaration.SourceGraphNode
-import ru.nsu.convoyeur.core.declaration.graph.StatefulSinkNode
-import ru.nsu.convoyeur.core.declaration.graph.StatefulTransformNode
+import ru.nsu.convoyeur.core.declaration.graph.SinkNode
+import ru.nsu.convoyeur.core.declaration.graph.TransformNode
 import ru.nsu.convoyeur.core.declaration.graph.asSourceNode
 import ru.nsu.convoyeur.core.declaration.graph.emit
-
 
 /**
  *         map3 <-  map2
@@ -18,63 +15,42 @@ class CycleExample : ConvoyeurExample<String>() {
     override fun getDeclarationGraph(): List<SourceGraphNode<String>> {
         val sourceNode = listOf("a", "b", "c").asSourceNode()
 
-        val mapNode = StatefulTransformNode<String, String>(
+        val mapNode = TransformNode<String, String>(
             id = "map1",
-            action = {
-                val sourceInputChan = inputChannel(sourceNode.id)
-                val map3InputChan = inputChannel("map3")
-
-                while (isActive && hasOpenInputChannels) {
-                    select<Unit> {
-                        if (!sourceInputChan?.isClosedForReceive!!) {
-                            sourceInputChan?.onReceiveCatching {
-                                println("get $it from source")
-                                it.getOrNull()?.let {
-                                    emit("map2", "MAP1[${it}]")
-                                }
-                            }
-                        } else {
-                            outputChannel("map2")?.close()
-                        }
-
-                        if (!map3InputChan?.isClosedForReceive!!) {
-                            map3InputChan?.onReceiveCatching {
-                                println("get $it from cycle")
-                                emit("sink", it.getOrNull() ?: "error")
-                            }
-                        }
+            action = { channelName, value ->
+                when (channelName) {
+                    sourceNode.id -> {
+                        println("get $value from source")
+                        emit("map2", "MAP1[$value]")
+                    }
+                    "map3" -> {
+                        println("get $value from cycle")
+                        emit("sink", value)
                     }
                 }
-            })
+            },
+            onChannelClose = { channelName ->
+                if (channelName == sourceNode.id) {
+                    outputChannel("map2")?.close()
+                }
+            }
 
-        val mapNode2 = StatefulTransformNode<String, String>(
+        )
+
+        val mapNode2 = TransformNode<String, String>(
             id = "map2",
-            action = {
-                val inputChannel = inputChannel()
-                inputChannel?.consumeEach {
-                    println("[map2] get $it from map")
-                    emit("MAP2[$it]")
-                }
-            })
+            action = { _, value -> emit("MAP2[$value]") }
+        )
 
-        val mapNode3 = StatefulTransformNode<String, String>(
+        val mapNode3 = TransformNode<String, String>(
             id = "map3",
-            action = {
-                val inputChannel = inputChannel()
-                inputChannel?.consumeEach {
-                    emit("MAP3[$it]")
-                }
-            })
+            action = { _, value -> emit("MAP3[$value]") }
+        )
 
-        val sinkNode = StatefulSinkNode<String>(
+        val sinkNode = SinkNode<String>(
             id = "sink",
-            action = {
-                val inputChannel = inputChannel()
-                inputChannel?.consumeEach {
-                    println("sink - $it")
-                }
-            })
-
+            action = { _, value -> println("sink - $value") }
+        )
 
         sourceNode.outputNodes = listOf(mapNode)
         mapNode.outputNodes = listOf(mapNode2, sinkNode)
