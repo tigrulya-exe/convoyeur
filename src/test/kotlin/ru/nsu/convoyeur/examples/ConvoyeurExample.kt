@@ -7,6 +7,7 @@ import ru.nsu.convoyeur.core.execution.DefaultExecutionManager
 import ru.nsu.convoyeur.core.execution.graph.CycleDetectingExecutionGraphBuilder
 import ru.nsu.convoyeur.core.execution.graph.SimpleBFSExecutionGraphBuilder
 import ru.nsu.convoyeur.util.LoggerProperty
+import java.lang.Exception
 import kotlin.test.Test
 
 abstract class ConvoyeurExample<S>(
@@ -21,10 +22,14 @@ abstract class ConvoyeurExample<S>(
     @Test
     fun execute() {
         graphBuilders.forEach {
-            logger.info("Test with ${it.javaClass}")
-            DefaultExecutionManager(it).execute(
-                getDeclarationGraph()
-            )
+            try {
+                logger.info("Test with ${it.javaClass}")
+                DefaultExecutionManager(it).execute(
+                    getDeclarationGraph()
+                )
+            } catch (exc: Exception) {
+                logger.error("Error during ${it.javaClass} execution: ${exc.message}")
+            }
         }
     }
 
@@ -37,8 +42,10 @@ abstract class ConvoyeurExample<S>(
                 getDeclarationGraph()
             )
 
-            handle.invokeOnCompletion {
-                logger.info("Task completed")
+            handle.invokeOnCompletion { exc ->
+                exc?.let {
+                    logger.error("Task error ${it.message}")
+                } ?: logger.info("Task completed")
             }
 
             handle.join()
