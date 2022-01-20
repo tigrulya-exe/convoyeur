@@ -19,9 +19,18 @@ interface MutableSourceExecutionContext<V> : SourceExecutionContext<V>, MutableN
 
 interface MutableConsumerExecutionContext<V> : ConsumerExecutionContext<V>, MutableNodeExecutionContext {
     var inputChannels: MutableMap<String, ReceiveChannel<V>>
+    /**
+     * Key - next cycle node id (output channel),
+     * value - previous cycle node id (input channel)
+     */
+    var inputCycleChannelIds: MutableMap<String, String>
 
     fun addInputChannel(nodeId: String, channel: ReceiveChannel<V>) {
         inputChannels[nodeId] = channel
+    }
+
+    fun registerCycle(nextCycleNodeId: String, previousCycleNodeId: String) {
+        inputCycleChannelIds[nextCycleNodeId] = previousCycleNodeId
     }
 
     override fun inputChannels(): Map<String, ReceiveChannel<V>> = inputChannels

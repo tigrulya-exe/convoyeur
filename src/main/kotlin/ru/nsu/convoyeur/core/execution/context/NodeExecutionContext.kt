@@ -11,6 +11,12 @@ class NodeExecutionContext<S, D>(
 ) : MutableExecutionContext<S, D> {
     private var isActiveAtomic: AtomicBoolean = AtomicBoolean()
 
+    /**
+     * Key - next cycle node id (output channel),
+     * value - previous cycle node id (input channel)
+     */
+    override var inputCycleChannelIds: MutableMap<String, String> = mutableMapOf()
+
     override var isActive: Boolean
         get() = isActiveAtomic.get()
         set(value) = isActiveAtomic.set(value)

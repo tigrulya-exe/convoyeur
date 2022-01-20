@@ -1,30 +1,33 @@
-package ru.nsu.convoyeur.examples
+package ru.nsu.convoyeur.core.execution.graph
 
 import ru.nsu.convoyeur.api.declaration.SourceGraphNode
 import ru.nsu.convoyeur.core.declaration.graph.SinkNode
 import ru.nsu.convoyeur.core.declaration.graph.TransformNode
 import ru.nsu.convoyeur.core.declaration.graph.asSourceNode
 import ru.nsu.convoyeur.core.declaration.graph.emit
-import ru.nsu.convoyeur.core.execution.graph.CycleDetectingExecutionGraphBuilder
+import kotlin.test.Test
 
-/**
- *         map3 <-  map2
- *            \   /
- * source --> map1 --> sink
- */
-class CycleExample : ConvoyeurExample<String>(
-    listOf(CycleDetectingExecutionGraphBuilder())
-) {
-    override fun getDeclarationGraph(): List<SourceGraphNode<String>> {
+//TODO
+class CycleDetectingExecutionGraphBuilderTest {
+    val graphBuilder = CycleDetectingExecutionGraphBuilder()
+
+    @Test
+    fun test() {
+        graphBuilder.build(getDeclarationGraph())
+    }
+
+    fun getDeclarationGraph(): List<SourceGraphNode<String>> {
         val sourceNode = listOf("a", "b", "c").asSourceNode()
 
         val mapNode = TransformNode<String, String>(
             id = "map1",
             onChannelClose = { channelName ->
-                println("Closed $channelName")
+                if (channelName == sourceNode.id) {
+                    outputChannel("map2")?.close()
+                }
             }
-        ) { inputChannelName, value ->
-            when (inputChannelName) {
+        ) { channelName, value ->
+            when (channelName) {
                 sourceNode.id -> {
                     println("get $value from source")
                     emit("map2", "MAP1[$value]")
@@ -55,5 +58,4 @@ class CycleExample : ConvoyeurExample<String>(
 
         return listOf(sourceNode);
     }
-
 }

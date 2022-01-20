@@ -45,12 +45,12 @@ class DefaultExecutionGraphNodeBuilder : ExecutionGraphNodeBuilder {
         node: StatelessConsumerNode<S, *, E>,
         context: MutableExecutionContext<S, *>,
     ): ContextEnrichedAction = suspend {
+        val openChannelKeys = HashSet(context.inputChannels.keys)
         with(context as E) {
-            val openChannels = HashSet(context.inputChannels.keys)
-            while (isActive && openChannels.isNotEmpty()) {
+            while (isActive && openChannelKeys.isNotEmpty()) {
                 val channelNameValue = select<Pair<String, S?>> {
                     context.inputChannels
-                        .filter { openChannels.contains(it.key) }
+                        .filter { openChannelKeys.contains(it.key) }
                         .forEach {
                             it.value.onReceiveCatching { result ->
                                 it.key to result.getOrNull()
@@ -59,12 +59,25 @@ class DefaultExecutionGraphNodeBuilder : ExecutionGraphNodeBuilder {
                 }
 
                 if (channelNameValue.second == null) {
-                    openChannels.remove(channelNameValue.first)
+                    openChannelKeys.remove(channelNameValue.first)
                     node.onChannelClose(context, channelNameValue.first)
+                    checkCycleNodes(context, openChannelKeys)
                     continue
                 }
                 node.action(context, channelNameValue.first, channelNameValue.second!!)
             }
         }
     }
+
+    private fun <S> checkCycleNodes(context: MutableExecutionContext<S, *>, openInputChannelKeys: Set<String>) {
+        val openNonCycleChannelKeys = openInputChannelKeys - context.inputCycleChannelIds.values.toSet()
+        if(openNonCycleChannelKeys.isNotEmpty()) {
+            return
+        }
+        context.outputChannels
+            .filter { it.key in context.inputCycleChannelIds.keys }
+            .forEach { it.value.close() }
+    }
+
+
 }

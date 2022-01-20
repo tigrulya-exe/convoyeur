@@ -6,11 +6,11 @@ import ru.nsu.convoyeur.api.execution.graph.ExecutionGraphNode
 import ru.nsu.convoyeur.api.execution.graph.transform.ExecutionGraphBuilder
 import ru.nsu.convoyeur.api.execution.manager.ExecutionManager
 import ru.nsu.convoyeur.api.execution.manager.JobHandle
-import ru.nsu.convoyeur.core.execution.graph.DefaultExecutionGraphBuilder
+import ru.nsu.convoyeur.core.execution.graph.CycleDetectingExecutionGraphBuilder
 import ru.nsu.convoyeur.core.execution.graph.ExecutionGraph
 
 class DefaultExecutionManager(
-    private val executionGraphBuilder: ExecutionGraphBuilder = DefaultExecutionGraphBuilder()
+    private val executionGraphBuilder: ExecutionGraphBuilder = CycleDetectingExecutionGraphBuilder()
 ) : ExecutionManager {
 
     private val executionGraphs = mutableMapOf<String, ExecutionGraph>()

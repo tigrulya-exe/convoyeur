@@ -7,9 +7,9 @@ import ru.nsu.convoyeur.core.declaration.graph.SinkNode
 import ru.nsu.convoyeur.core.declaration.graph.asSourceNode
 import kotlin.test.Test
 
-class DefaultExecutionGraphBuilderTest {
+class SimpleBFSExecutionGraphBuilderTest {
 
-    private val graphBuilder = DefaultExecutionGraphBuilder()
+    private val graphBuilder = SimpleBFSExecutionGraphBuilder()
 
     @Test
     fun buildSimpleGraph() {
