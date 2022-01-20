@@ -1,92 +1,55 @@
 package ru.nsu.convoyeur.examples
 
-import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.selects.select
 import ru.nsu.convoyeur.api.declaration.SourceGraphNode
-import ru.nsu.convoyeur.core.declaration.graph.StatefulSinkNode
-import ru.nsu.convoyeur.core.declaration.graph.SourceNode
-import ru.nsu.convoyeur.core.declaration.graph.StatefulTransformNode
-import ru.nsu.convoyeur.core.declaration.graph.emit
+import ru.nsu.convoyeur.core.declaration.graph.*
 
+/**
+ * source1 -> filter -> sink
+ *          \       /
+ *           \    /
+ * source2 -> map
+ */
 class SeveralSourcesExample : ConvoyeurExample<Int>() {
     override fun getDeclarationGraph(): List<SourceGraphNode<Int>> {
-        val sourceNode = SourceNode<Int>(
-            id = "source-id",
-            action = {
-                repeat(10) {
-                    println("[SOURCE] Send to map $it")
-                    emit("map-id", it)
-                }
-                println("[SOURCE] FINISH")
-            })
+        val sourceNode = SourceNode<Int>("source-id") {
+            repeat(10) {
+                println("[SOURCE] Send $it")
+                emit("map-id", it)
+                emit("filter-id", it)
+                delay(100)
+            }
+        }
 
-        val secondSourceNode = SourceNode<Int>(
-            id = "second-source-id",
-            action = {
-                (20..30).forEach {
-                    println("[SOURCE-2] Send to map $it")
-                    emit("map-id", it)
-                }
-                println("[SOURCE-2] FINISH")
-            })
+        val secondSourceNode = (20..30).asSourceNode(id = "second-source-id")
 
-        val mapNode = StatefulTransformNode<Int, String>(
+        val mapNode = TransformNode<Int, String>(
             id = "map-id",
-            // можно над апи подумать, мб стоит в момент линковки с детьми буфф сайз прописывать
             bufferSizes = mapOf(
                 "source-id" to 4,
                 "second-source-id" to 2
-            ),
-            action = {
-                val inputChan = inputChannel("source-id")
-                inputChan?.consumeEach {
-                    println("[MAP] Sending to sink $it")
-                    emit("sink-id", "Mapped [$it]")
-                }
-                inputChannel("second-source-id")?.consumeEach {
-                    println("[MAP-2] Sending to sink $it")
-                    emit("sink-id", "Mapped-2 [$it]")
-                }
-                println("[MAP] FINISH")
-            })
+            )
+        ) { channelName, value ->
+            println("[MAP] Map $value from '$channelName'")
+            emit("Mapped from '$channelName' [$value]")
+        }
 
-        val filterNode = StatefulTransformNode<Int, String>(
-            id = "filter-id",
-            action = {
-                println("[FILTER] ${Thread.currentThread().name}")
-                val inputChan = inputChannel("source-id")
-                inputChan?.consumeEach {
-                    if (it % 2 == 0) {
-                        println("[FILTER] Sending to sink $it")
-                        emit("sink-id", "Filtered [$it]")
-                    }
-                }
-                println("[FILTER] FINISH")
-            })
+        val filterNode = TransformNode<Int, String>("filter-id") { _, value ->
+            println("[FILTER] Filter $value")
+            if (value % 2 == 0) {
+                emit("Filtered [$value]")
+            }
+        }
 
-        val sinkNode = StatefulSinkNode<String>(
-            id = "sink-id",
-            action = {
-                // тут юзер волен задать джойн как ему угодно
-                // для простоты тут игрушечный пример для конечных стримов
-
-                while (isActive && hasOpenInputChannels) {
-                    val result = select<Pair<String, String?>> {
-                        inputChannels()
-                            .filter { !it.value.isClosedForReceive }
-                            .forEach {
-                                it.value.onReceiveCatching { result ->
-                                    it.key to result.getOrNull()
-                                }
-                            }
-                    }
-                    delay(400)
-                    println("[SINK] Get from '${result.first}': ${result.second}")
-                }
-                println("[SINK] FINISH")
-            })
-
+        val sinkNode = SinkNode<String>(
+            "sink-id",
+            onChannelClose = { println("Channel $it close") }
+        ) { channelName, value ->
+            println("[SINK] Get value '$value' from channel '$channelName")
+            // check backpressure
+            delay(1000)
+        }
 
         val outputNodes = listOf(
             mapNode.apply {

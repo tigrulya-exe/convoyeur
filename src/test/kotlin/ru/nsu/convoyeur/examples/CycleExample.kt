@@ -17,40 +17,35 @@ class CycleExample : ConvoyeurExample<String>() {
 
         val mapNode = TransformNode<String, String>(
             id = "map1",
-            action = { channelName, value ->
-                when (channelName) {
-                    sourceNode.id -> {
-                        println("get $value from source")
-                        emit("map2", "MAP1[$value]")
-                    }
-                    "map3" -> {
-                        println("get $value from cycle")
-                        emit("sink", value)
-                    }
-                }
-            },
             onChannelClose = { channelName ->
                 if (channelName == sourceNode.id) {
                     outputChannel("map2")?.close()
                 }
             }
+        ) { channelName, value ->
+            when (channelName) {
+                sourceNode.id -> {
+                    println("get $value from source")
+                    emit("map2", "MAP1[$value]")
+                }
+                "map3" -> {
+                    println("get $value from cycle")
+                    emit("sink", value)
+                }
+            }
+        }
 
-        )
+        val mapNode2 = TransformNode<String, String>("map2") { _, value ->
+            emit("MAP2[$value]")
+        }
 
-        val mapNode2 = TransformNode<String, String>(
-            id = "map2",
-            action = { _, value -> emit("MAP2[$value]") }
-        )
+        val mapNode3 = TransformNode<String, String>("map3") { _, value ->
+            emit("MAP3[$value]")
+        }
 
-        val mapNode3 = TransformNode<String, String>(
-            id = "map3",
-            action = { _, value -> emit("MAP3[$value]") }
-        )
-
-        val sinkNode = SinkNode<String>(
-            id = "sink",
-            action = { _, value -> println("sink - $value") }
-        )
+        val sinkNode = SinkNode<String>("sink") { _, value ->
+            println("sink - $value")
+        }
 
         sourceNode.outputNodes = listOf(mapNode)
         mapNode.outputNodes = listOf(mapNode2, sinkNode)

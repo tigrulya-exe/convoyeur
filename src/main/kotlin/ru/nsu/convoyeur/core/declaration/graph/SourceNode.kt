@@ -7,9 +7,9 @@ import ru.nsu.convoyeur.api.execution.context.SourceExecutionContext
 import java.util.*
 
 open class SourceNode<V>(
-    override val id: String,
-    override val action: suspend SourceExecutionContext<V>.() -> Unit,
+    override val id: String = GraphNodeIdProvider.provideId(),
     override var outputNodes: List<ConsumerGraphNode<V, *>> = listOf(),
+    override val action: suspend SourceExecutionContext<V>.() -> Unit,
 ) : SourceGraphNode<V>, StatefulGraphNode<Nothing, V, SourceExecutionContext<V>>
 
 suspend fun <V> SourceExecutionContext<V>.emit(nodeId: String, value: V) {
@@ -23,20 +23,18 @@ suspend fun <V> SourceExecutionContext<V>.emit(value: V) {
     outputChannels().values.firstOrNull()?.send(value)
 }
 
-fun <V> Iterable<V>.asSourceNode(): SourceGraphNode<V> {
+fun <V> Iterable<V>.asSourceNode(
+    id: String = UUID.randomUUID().toString(),
+    outputChannelName: String? = null
+): SourceGraphNode<V> {
     return SourceNode(
-        id = UUID.randomUUID().toString(),
+        id = id,
         action = {
-            this@asSourceNode.forEach { emit(it) }
-        }
-    )
-}
-
-fun <V> Iterable<V>.asSourceNode(outputChannelName: String): SourceGraphNode<V> {
-    return SourceNode(
-        id = UUID.randomUUID().toString(),
-        action = {
-            this@asSourceNode.forEach { emit(outputChannelName, it) }
+            this@asSourceNode.forEach {
+                outputChannelName?.let { name ->
+                    emit(name, it)
+                } ?: emit(it)
+            }
         }
     )
 }

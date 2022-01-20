@@ -6,14 +6,14 @@ import ru.nsu.convoyeur.api.declaration.StatelessConsumerNode
 import ru.nsu.convoyeur.api.execution.context.ConsumerExecutionContext
 
 open class StatefulSinkNode<V>(
-    override val id: String,
+    override val id: String = GraphNodeIdProvider.provideId(),
     override val bufferSizes: Map<String, Int> = mutableMapOf(),
     override val action: suspend ConsumerExecutionContext<V>.() -> Unit,
 ) : SinkGraphNode<V>, StatefulGraphNode<V, Nothing, ConsumerExecutionContext<V>>
 
 open class SinkNode<V>(
-    override val id: String,
+    override val id: String = GraphNodeIdProvider.provideId(),
     override val bufferSizes: Map<String, Int> = mutableMapOf(),
-    override val action: suspend ConsumerExecutionContext<V>.(String, V) -> Unit,
     override val onChannelClose: suspend ConsumerExecutionContext<V>.(String) -> Unit = {},
+    override val action: suspend ConsumerExecutionContext<V>.(String, V) -> Unit,
 ) : SinkGraphNode<V>, StatelessConsumerNode<V, Nothing, ConsumerExecutionContext<V>>
