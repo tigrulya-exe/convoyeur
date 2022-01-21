@@ -52,9 +52,8 @@ class LinearGraphExample : ConvoyeurExample<Int>() {
             println("[SINK] Get value '$value' from channel '$channelName")
         }
 
-        sourceNode
+        sourceNode.via(filterNode)
             .via(mapNode)
-            .via(filterNode)
             .to(sinkNode)
 
         return listOf(sourceNode)

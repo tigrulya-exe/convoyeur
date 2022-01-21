@@ -62,18 +62,11 @@ class SeveralSourcesExample : ConvoyeurExample<Int>() {
             delay(100)
         }
 
-        val commonGraph = arrayOf(
-            mapNode.goesTo(sinkNode, sinkNode2),
-            filterNode.goesTo(sinkNode)
-        )
+        mapNode.goesTo(sinkNode, sinkNode2)
+        filterNode.goesTo(sinkNode)
 
-
-
+        sourceNode.goesVia(mapNode, filterNode)
         secondSourceNode.via(mapNode)
-            .
-
-        sourceNode.goesVia(*commonGraph)
-        secondSourceNode.goesVia(*commonGraph)
 
         return listOf(sourceNode, secondSourceNode)
     }
