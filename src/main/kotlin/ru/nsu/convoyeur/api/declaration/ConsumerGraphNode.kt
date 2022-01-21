@@ -12,7 +12,7 @@ interface StatelessConsumerNode<S, D, in C : ConsumerExecutionContext<S>> : Cons
 }
 
 interface SinkGraphNode<V> : ConsumerGraphNode<V, Nothing> {
-    override var outputNodes: List<ConsumerGraphNode<Nothing, *>>
-        get() = emptyList()
+    override var outputNodes: MutableList<ConsumerGraphNode<Nothing, *>>
+        get() = ArrayList()
         set(_) {}
 }

@@ -30,7 +30,7 @@ class ErrorHandlingExample : ConvoyeurExample<String>() {
                 }
             })
 
-        source.outputNodes = listOf(sinkNode)
+        source.goesTo(sinkNode)
         return listOf(source)
     }
 }

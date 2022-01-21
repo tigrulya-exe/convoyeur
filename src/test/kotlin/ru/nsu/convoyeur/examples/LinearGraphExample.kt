@@ -55,17 +55,10 @@ class LinearGraphExample : ConvoyeurExample<Int>() {
             println("[SINK] Get value '$value' from channel '$channelName")
         }
 
-        val outputNodes = listOf(
-            mapNode.apply {
-                outputNodes = listOf(sinkNode)
-            },
-
-            filterNode.apply {
-                outputNodes = listOf(sinkNode)
-            }
+        sourceNode.goesVia(
+            mapNode.goesTo(sinkNode),
+            filterNode.goesTo(sinkNode)
         )
-
-        sourceNode.outputNodes = outputNodes
 
         return listOf(sourceNode)
     }

@@ -51,10 +51,9 @@ class CycleDetectingExecutionGraphBuilderTest {
             println("sink - $value")
         }
 
-        sourceNode.outputNodes = listOf(mapNode)
-        mapNode.outputNodes = listOf(mapNode2, sinkNode)
-        mapNode2.outputNodes = listOf(mapNode3)
-        mapNode3.outputNodes = listOf(mapNode)
+        sourceNode
+            .via(mapNode).via(mapNode2).via(mapNode3).via(mapNode)
+            .to(sinkNode)
 
         return listOf(sourceNode);
     }

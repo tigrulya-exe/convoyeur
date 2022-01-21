@@ -17,7 +17,7 @@ class SimpleBFSExecutionGraphBuilderTest {
         val source = (1..3)
             .asSourceNode()
             .apply {
-                outputNodes = listOf(sink)
+                outputNodes = mutableListOf(sink)
             }
 
         val executionGraph = graphBuilder.build(source)

@@ -36,9 +36,11 @@ class StatelessNodesExample : ConvoyeurExample<Int>() {
             onChannelClose = { println("[sink] channel $it closed") }
         )
 
-        sourceNode.outputNodes = listOf(filterNode)
-        filterNode.outputNodes = listOf(mapNode)
-        mapNode.outputNodes = listOf(sinkNode)
+        sourceNode
+            .via(filterNode)
+            .via(mapNode)
+            .to(sinkNode)
+
         return listOf(sourceNode);
     }
 }
