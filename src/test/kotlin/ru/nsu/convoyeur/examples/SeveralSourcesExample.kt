@@ -25,7 +25,7 @@ class SeveralSourcesExample : ConvoyeurExample<Int>() {
 
         val mapNode = TransformNode<Int, String>(
             id = "map-id",
-            bufferSizes = mapOf(
+            bufferSizes = mutableMapOf(
                 "source-id" to 4,
                 "second-source-id" to 2
             )

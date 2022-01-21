@@ -39,7 +39,7 @@ class LinearGraphExample : ConvoyeurExample<Int>() {
         // stateless (except closure variables) transform node (with both inputs and outputs)
         val mapNode = TransformNode<String, String>(
             // define buffer sizes of each channel (default is 1)
-            bufferSizes = mapOf("source-id" to 2)
+            bufferSizes = mutableMapOf("source-id" to 2)
         ) { _, value ->
             // send value to first channel
             emit("Mapped [$value]")
