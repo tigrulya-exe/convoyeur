@@ -5,36 +5,40 @@ import ru.nsu.convoyeur.api.declaration.SourceGraphNode
 import ru.nsu.convoyeur.api.execution.graph.ExecutionGraphNode
 import ru.nsu.convoyeur.api.execution.graph.transform.ExecutionGraphBuilder
 import ru.nsu.convoyeur.api.execution.manager.ExecutionManager
-import ru.nsu.convoyeur.api.execution.manager.JobHandle
 import ru.nsu.convoyeur.core.execution.graph.CycleDetectingExecutionGraphBuilder
 import ru.nsu.convoyeur.core.execution.graph.ExecutionGraph
+
+data class ExecutionGraphMetadata(val executionGraph: ExecutionGraph) {
+    lateinit var job: Job
+}
 
 class DefaultExecutionManager(
     private val executionGraphBuilder: ExecutionGraphBuilder = CycleDetectingExecutionGraphBuilder()
 ) : ExecutionManager {
 
-    private val executionGraphs = mutableMapOf<String, ExecutionGraph>()
-    private val jobs = mutableMapOf<String, MutableMap<String, Job>>()
+    private val executionGraphs = mutableMapOf<String, ExecutionGraphMetadata>()
 
     override fun <V> execute(sources: List<SourceGraphNode<V>>) = runBlocking {
-        execute(this, sources)
+        val executeJob = executeAsync(sources)
+        executeJob.join()
     }
 
-    override fun <V> executeAsync(sources: List<SourceGraphNode<V>>): Job = GlobalScope.launch {
-        execute(this, sources)
-    }
+    override fun <V> executeAsync(sources: List<SourceGraphNode<V>>) =
+        execute(executionGraphBuilder.build(sources))
 
-    private suspend fun <V> execute(scope: CoroutineScope, sources: List<SourceGraphNode<V>>) {
-        val executionGraph = executionGraphBuilder.build(sources)
-        val nodeJobs = executionGraph.nodes
-            .mapValues { launchNode(scope, it.value) }
-            .toMutableMap()
-
-        JobHandle().also {
-            jobs[it.id] = nodeJobs
-            executionGraphs[it.id] = executionGraph
+    override fun shutdown() {
+        runBlocking {
+            executionGraphs.values
+                .onEach { it.job.cancel() }
+                .forEach { it.job.join() }
         }
     }
+
+    private fun execute(executionGraph: ExecutionGraph) = GlobalScope.launch {
+        executionGraph.nodes
+            .forEach { launchNode(this, it.value) }
+        executionGraphs[executionGraph.id] = ExecutionGraphMetadata(executionGraph)
+    }.also { executionGraphs[executionGraph.id]?.job = it }
 
     private suspend fun launchNode(
         scope: CoroutineScope,
@@ -44,8 +48,6 @@ class DefaultExecutionManager(
             try {
                 context.isActive = true
                 action()
-//            } catch (e: Exception) {
-//                println("EXCEPTION: $e")
             } finally {
                 context.isActive = false
                 context.outputChannels.values.forEach {

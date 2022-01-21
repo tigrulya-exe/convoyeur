@@ -3,12 +3,9 @@ package ru.nsu.convoyeur.examples
 import kotlinx.coroutines.channels.consumeEach
 import ru.nsu.convoyeur.api.declaration.SourceGraphNode
 import ru.nsu.convoyeur.core.declaration.graph.*
-import kotlin.random.Random
 
 /**
- * source -> map -> sink
- *        \      /
- *         filter
+ * source -> filter -> map -> sink
  */
 class LinearGraphExample : ConvoyeurExample<Int>() {
     override fun getDeclarationGraph(): List<SourceGraphNode<Int>> {
@@ -21,15 +18,6 @@ class LinearGraphExample : ConvoyeurExample<Int>() {
             println("[SOURCE] FINISH")
         }
 
-        // stateless (except closure variables) transform node (with both inputs and outputs)
-        val mapNode = TransformNode<Int, String>(
-            // define buffer sizes of each channel (default is 1)
-            bufferSizes = mapOf("source-id" to 2)
-        ) { _, value ->
-            // send value to first channel
-            emit("Mapped [$value]")
-        }
-
         // stateful transform node
         val filterNode = StatefulTransformNode<Int, String>(
             id = "filter-id",
@@ -40,13 +28,22 @@ class LinearGraphExample : ConvoyeurExample<Int>() {
                 val inputChan = inputChannel("source-id")
                 inputChan?.consumeEach {
                     if (it % 2 == 0) {
-                        println("[FILTER] Sending to sink $it")
+                        println("[FILTER] Sending to map $it")
                         emit("sink-id", "Filtered [$it] + state[$someState]")
                     }
                     someState = (0..1000).random()
                 }
                 println("[FILTER] FINISH")
             })
+
+        // stateless (except closure variables) transform node (with both inputs and outputs)
+        val mapNode = TransformNode<String, String>(
+            // define buffer sizes of each channel (default is 1)
+            bufferSizes = mapOf("source-id" to 2)
+        ) { _, value ->
+            // send value to first channel
+            emit("Mapped [$value]")
+        }
 
         val sinkNode = SinkNode<String>(
             "sink-id",
@@ -55,10 +52,10 @@ class LinearGraphExample : ConvoyeurExample<Int>() {
             println("[SINK] Get value '$value' from channel '$channelName")
         }
 
-        sourceNode.goesVia(
-            mapNode.goesTo(sinkNode),
-            filterNode.goesTo(sinkNode)
-        )
+        sourceNode
+            .via(mapNode)
+            .via(filterNode)
+            .to(sinkNode)
 
         return listOf(sourceNode)
     }

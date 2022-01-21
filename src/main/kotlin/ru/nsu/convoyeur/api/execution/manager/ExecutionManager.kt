@@ -7,4 +7,6 @@ interface ExecutionManager {
     fun <V> execute(sources: List<SourceGraphNode<V>>)
 
     fun <V> executeAsync(sources: List<SourceGraphNode<V>>): Job
+
+    fun shutdown()
 }
