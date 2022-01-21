@@ -5,10 +5,10 @@ import ru.nsu.convoyeur.api.declaration.SourceGraphNode
 import ru.nsu.convoyeur.core.declaration.graph.*
 
 /**
- * source1 -> filter -> sink
+ * source1 -> filter -> sink1
  *          \       /
  *           \    /
- * source2 -> map
+ * source2 -> map -> sink2
  */
 class SeveralSourcesExample : ConvoyeurExample<Int>() {
     override fun getDeclarationGraph(): List<SourceGraphNode<Int>> {
@@ -31,7 +31,10 @@ class SeveralSourcesExample : ConvoyeurExample<Int>() {
             )
         ) { channelName, value ->
             println("[MAP] Map $value from '$channelName'")
-            emit("Mapped from '$channelName' [$value]")
+            "Mapped from '$channelName' [$value]".let {
+                emit("sink1", it)
+                emit("sink2", it)
+            }
         }
 
         val filterNode = TransformNode<Int, String>("filter-id") { _, value ->
@@ -42,21 +45,28 @@ class SeveralSourcesExample : ConvoyeurExample<Int>() {
         }
 
         val sinkNode = SinkNode<String>(
-            "sink-id",
+            "sink1",
             onChannelClose = { println("Channel $it close") }
         ) { channelName, value ->
             println("[SINK] Get value '$value' from channel '$channelName")
             // check backpressure
-            delay(1000)
+            delay(400)
         }
 
-        val commonGraph = arrayOf(
-            mapNode.goesTo(sinkNode),
-            filterNode.goesTo(sinkNode)
-        )
+        val sinkNode2 = SinkNode<String>(
+            "sink2",
+            onChannelClose = { println("Channel $it close") }
+        ) { channelName, value ->
+            println("[SINK2] Get value '$value' from channel '$channelName")
+            // check backpressure
+            delay(100)
+        }
 
-        sourceNode.goesVia(*commonGraph)
-        secondSourceNode.goesVia(*commonGraph)
+        mapNode.goesTo(sinkNode, sinkNode2)
+        filterNode.goesTo(sinkNode)
+
+        sourceNode.goesVia(mapNode, filterNode)
+        secondSourceNode.via(mapNode)
 
         return listOf(sourceNode, secondSourceNode)
     }

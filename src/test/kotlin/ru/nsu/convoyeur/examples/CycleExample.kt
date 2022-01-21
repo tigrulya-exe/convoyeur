@@ -52,7 +52,7 @@ class CycleExample : ConvoyeurExample<String>(
             .via(mapNode).via(mapNode2).via(mapNode3).via(mapNode) // cycle
             .to(sinkNode)
 
-        return listOf(sourceNode);
+        return listOf(sourceNode)
     }
 
 }

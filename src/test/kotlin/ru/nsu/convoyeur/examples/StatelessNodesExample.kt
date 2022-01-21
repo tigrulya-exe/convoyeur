@@ -6,6 +6,9 @@ import ru.nsu.convoyeur.core.declaration.graph.TransformNode
 import ru.nsu.convoyeur.core.declaration.graph.asSourceNode
 import ru.nsu.convoyeur.core.declaration.graph.emit
 
+/**
+ * source -> filter -> map -> sink
+ */
 class StatelessNodesExample : ConvoyeurExample<Int>() {
     override fun getDeclarationGraph(): List<SourceGraphNode<Int>> {
         val sourceNode = (1..10).asSourceNode()
