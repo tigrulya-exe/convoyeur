@@ -3,7 +3,7 @@ package ru.nsu.convoyeur.api.declaration
 import ru.nsu.convoyeur.api.execution.context.ConsumerExecutionContext
 
 interface ConsumerGraphNode<S, D> : GraphNode<S, D> {
-    val bufferSizes: Map<String, Int>
+    val bufferSizes: MutableMap<String, Int>
 }
 
 interface StatelessConsumerNode<S, D, in C : ConsumerExecutionContext<S>> : ConsumerGraphNode<S, D> {
