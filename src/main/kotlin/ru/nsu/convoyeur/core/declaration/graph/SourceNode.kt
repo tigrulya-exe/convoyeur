@@ -8,7 +8,7 @@ import java.util.*
 
 open class SourceNode<V>(
     override val id: String = GraphNodeIdProvider.provideId(),
-    override var outputNodes: List<ConsumerGraphNode<V, *>> = listOf(),
+    override var outputNodes: MutableList<ConsumerGraphNode<V, *>> = mutableListOf(),
     override val action: suspend SourceExecutionContext<V>.() -> Unit,
 ) : SourceGraphNode<V>, StatefulGraphNode<Nothing, V, SourceExecutionContext<V>>
 

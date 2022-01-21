@@ -1,7 +1,6 @@
 package ru.nsu.convoyeur.examples
 
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.selects.select
 import ru.nsu.convoyeur.api.declaration.SourceGraphNode
 import ru.nsu.convoyeur.core.declaration.graph.*
 
@@ -51,18 +50,13 @@ class SeveralSourcesExample : ConvoyeurExample<Int>() {
             delay(1000)
         }
 
-        val outputNodes = listOf(
-            mapNode.apply {
-                outputNodes = listOf(sinkNode)
-            },
-
-            filterNode.apply {
-                outputNodes = listOf(sinkNode)
-            }
+        val commonGraph = arrayOf(
+            mapNode.goesTo(sinkNode),
+            filterNode.goesTo(sinkNode)
         )
 
-        sourceNode.outputNodes = outputNodes
-        secondSourceNode.outputNodes = outputNodes
+        sourceNode.goesVia(*commonGraph)
+        secondSourceNode.goesVia(*commonGraph)
 
         return listOf(sourceNode, secondSourceNode)
     }
