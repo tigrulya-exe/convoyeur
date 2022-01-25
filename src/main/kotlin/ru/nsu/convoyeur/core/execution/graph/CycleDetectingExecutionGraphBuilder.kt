@@ -83,7 +83,6 @@ class CycleDetectingExecutionGraphBuilder(
             }
         }
 
-
         return traversedNodes.mapValues { it.value.node }
     }
 

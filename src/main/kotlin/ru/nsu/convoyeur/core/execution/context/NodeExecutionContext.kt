@@ -5,9 +5,10 @@ import kotlinx.coroutines.channels.SendChannel
 import ru.nsu.convoyeur.api.execution.context.MutableExecutionContext
 import java.util.concurrent.atomic.AtomicBoolean
 
-class NodeExecutionContext<S, D>(
+data class NodeExecutionContext<S, D>(
     override var inputChannels: MutableMap<String, ReceiveChannel<S>> = mutableMapOf(),
     override var outputChannels: MutableMap<String, SendChannel<D>> = mutableMapOf(),
+    override var parallelIndex: Int = 1
 ) : MutableExecutionContext<S, D> {
     private var isActiveAtomic: AtomicBoolean = AtomicBoolean()
 
