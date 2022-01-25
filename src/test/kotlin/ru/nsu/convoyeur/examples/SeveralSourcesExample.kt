@@ -62,10 +62,10 @@ class SeveralSourcesExample : ConvoyeurExample<Int>() {
             delay(100)
         }
 
-        mapNode.goesTo(sinkNode, sinkNode2)
-        filterNode.goesTo(sinkNode)
-
-        sourceNode.goesVia(mapNode, filterNode)
+        sourceNode.goesVia(
+            mapNode.goesTo(sinkNode, sinkNode2),
+            filterNode.goesTo(sinkNode)
+        )
         secondSourceNode.via(mapNode)
 
         return listOf(sourceNode, secondSourceNode)

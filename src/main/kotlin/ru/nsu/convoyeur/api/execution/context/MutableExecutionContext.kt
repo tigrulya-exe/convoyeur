@@ -5,6 +5,7 @@ import kotlinx.coroutines.channels.SendChannel
 
 interface MutableNodeExecutionContext {
     var isActive: Boolean
+    var parallelIndex: Int // индекс параллельного экземпляра узла (от 0 до parallelism - 1)
 }
 
 interface MutableSourceExecutionContext<V> : SourceExecutionContext<V>, MutableNodeExecutionContext {

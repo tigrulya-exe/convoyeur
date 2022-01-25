@@ -47,7 +47,7 @@ class DefaultExecutionManager(
         with(node) {
             try {
                 context.isActive = true
-                action()
+                action(this@launch)
             } finally {
                 context.isActive = false
                 context.outputChannels.values.forEach {

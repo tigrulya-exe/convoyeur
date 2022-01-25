@@ -7,6 +7,7 @@ import kotlinx.coroutines.channels.SendChannel
 // для использования в выполняемых на нодах функциях
 interface ExecutionContext {
     val isActive: Boolean
+    val parallelIndex: Int // индекс параллельного экземпляра узла (от 0 до parallelism - 1)
 }
 
 interface SourceExecutionContext<V> : ExecutionContext {
@@ -15,7 +16,7 @@ interface SourceExecutionContext<V> : ExecutionContext {
     fun outputChannel(nodeId: String) = outputChannels()[nodeId]
 }
 
-interface ConsumerExecutionContext<V> : ExecutionContext {
+interface ConsumerExecutionContext<out V> : ExecutionContext {
     fun inputChannels(): Map<String, ReceiveChannel<V>>
 
     fun inputChannel(nodeId: String) = inputChannels()[nodeId]

@@ -44,7 +44,7 @@ class DefaultExecutionGraphNodeBuilderTest {
                 inputChannel.close()
             }
             launch {
-                result.action()
+                result.action(this)
             }
         }
 
@@ -69,7 +69,7 @@ class DefaultExecutionGraphNodeBuilderTest {
         }
 
         runBlocking {
-            result.action()
+            result.action(this)
         }
 
         assertEquals(SINK_ID, container)

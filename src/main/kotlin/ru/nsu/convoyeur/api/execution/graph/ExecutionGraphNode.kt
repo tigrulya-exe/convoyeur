@@ -1,8 +1,9 @@
 package ru.nsu.convoyeur.api.execution.graph
 
+import kotlinx.coroutines.CoroutineScope
 import ru.nsu.convoyeur.api.execution.context.MutableExecutionContext
 
-typealias ContextEnrichedAction = suspend () -> Unit
+typealias ContextEnrichedAction = suspend (CoroutineScope) -> Unit
 
 interface ExecutionGraphNode<S, D> {
     val id: String
