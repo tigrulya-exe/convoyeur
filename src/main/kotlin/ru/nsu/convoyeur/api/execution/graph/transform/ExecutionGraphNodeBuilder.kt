@@ -1,6 +1,6 @@
 package ru.nsu.convoyeur.api.execution.graph.transform
 
-import ru.nsu.convoyeur.api.declaration.GraphNode
+import ru.nsu.convoyeur.api.declaration.graph.GraphNode
 import ru.nsu.convoyeur.api.execution.context.MutableExecutionContext
 import ru.nsu.convoyeur.api.execution.graph.ExecutionGraphNode
 

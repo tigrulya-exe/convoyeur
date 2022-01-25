@@ -1,4 +1,4 @@
-package ru.nsu.convoyeur.api.declaration
+package ru.nsu.convoyeur.api.declaration.graph
 
 interface ProducerGraphNode<S, D>: GraphNode<S, D> {
     fun to(outNode: SinkGraphNode<D>, bufferSize: Int = 1) : SinkGraphNode<D> {

@@ -1,7 +1,7 @@
 package ru.nsu.convoyeur.examples
 
 import kotlinx.coroutines.channels.consumeEach
-import ru.nsu.convoyeur.api.declaration.SourceGraphNode
+import ru.nsu.convoyeur.api.declaration.graph.SourceGraphNode
 import ru.nsu.convoyeur.core.declaration.graph.*
 
 /**

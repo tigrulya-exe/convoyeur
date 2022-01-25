@@ -1,8 +1,8 @@
 package ru.nsu.convoyeur.core.declaration.graph
 
-import ru.nsu.convoyeur.api.declaration.SinkGraphNode
-import ru.nsu.convoyeur.api.declaration.StatefulGraphNode
-import ru.nsu.convoyeur.api.declaration.StatelessConsumerNode
+import ru.nsu.convoyeur.api.declaration.graph.SinkGraphNode
+import ru.nsu.convoyeur.api.declaration.graph.StatefulGraphNode
+import ru.nsu.convoyeur.api.declaration.graph.StatelessConsumerNode
 import ru.nsu.convoyeur.api.execution.context.ConsumerExecutionContext
 
 open class StatefulSinkNode<V>(

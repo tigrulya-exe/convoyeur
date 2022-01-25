@@ -1,7 +1,7 @@
 package ru.nsu.convoyeur.core.execution
 
 import kotlinx.coroutines.*
-import ru.nsu.convoyeur.api.declaration.SourceGraphNode
+import ru.nsu.convoyeur.api.declaration.graph.SourceGraphNode
 import ru.nsu.convoyeur.api.execution.graph.ExecutionGraphNode
 import ru.nsu.convoyeur.api.execution.graph.transform.ExecutionGraphBuilder
 import ru.nsu.convoyeur.api.execution.manager.ExecutionManager

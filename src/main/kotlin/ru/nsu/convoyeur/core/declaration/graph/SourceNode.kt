@@ -1,8 +1,8 @@
 package ru.nsu.convoyeur.core.declaration.graph
 
-import ru.nsu.convoyeur.api.declaration.ConsumerGraphNode
-import ru.nsu.convoyeur.api.declaration.SourceGraphNode
-import ru.nsu.convoyeur.api.declaration.StatefulGraphNode
+import ru.nsu.convoyeur.api.declaration.graph.ConsumerGraphNode
+import ru.nsu.convoyeur.api.declaration.graph.SourceGraphNode
+import ru.nsu.convoyeur.api.declaration.graph.StatefulGraphNode
 import ru.nsu.convoyeur.api.execution.context.SourceExecutionContext
 import java.util.*
 
