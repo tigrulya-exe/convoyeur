@@ -29,6 +29,11 @@ class DefaultExecutionManager(
     override fun shutdown() {
         runBlocking {
             executionGraphs.values
+                .onEach {
+                    it.executionGraph.nodes.forEach { nodeEntry ->
+                        nodeEntry.value.context.isActive = false
+                    }
+                }
                 .onEach { it.job.cancel() }
                 .forEach { it.job.join() }
         }

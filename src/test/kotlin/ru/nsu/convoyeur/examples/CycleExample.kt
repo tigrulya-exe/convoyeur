@@ -1,9 +1,9 @@
 package ru.nsu.convoyeur.examples
 
 import ru.nsu.convoyeur.api.declaration.graph.SourceGraphNode
+import ru.nsu.convoyeur.core.declaration.extension.asSourceNode
 import ru.nsu.convoyeur.core.declaration.graph.SinkNode
 import ru.nsu.convoyeur.core.declaration.graph.TransformNode
-import ru.nsu.convoyeur.core.declaration.graph.asSourceNode
 import ru.nsu.convoyeur.core.declaration.graph.emit
 import ru.nsu.convoyeur.core.execution.graph.CycleDetectingExecutionGraphBuilder
 

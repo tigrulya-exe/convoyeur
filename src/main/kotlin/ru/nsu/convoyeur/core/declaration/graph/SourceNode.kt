@@ -23,19 +23,3 @@ suspend fun <V> SourceExecutionContext<V>.emit(nodeId: String, value: V) {
 suspend fun <V> SourceExecutionContext<V>.emit(value: V) {
     outputChannels().values.firstOrNull()?.send(value)
 }
-
-fun <V> Iterable<V>.asSourceNode(
-    id: String = UUID.randomUUID().toString(),
-    outputChannelName: String? = null
-): SourceGraphNode<V> {
-    return SourceNode(
-        id = id,
-        action = {
-            this@asSourceNode.forEach {
-                outputChannelName?.let { name ->
-                    emit(name, it)
-                } ?: emit(it)
-            }
-        }
-    )
-}

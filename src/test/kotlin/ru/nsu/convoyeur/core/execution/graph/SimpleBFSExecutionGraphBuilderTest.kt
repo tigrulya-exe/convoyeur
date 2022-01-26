@@ -3,8 +3,8 @@ package ru.nsu.convoyeur.core.execution.graph
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.maps.shouldBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
+import ru.nsu.convoyeur.core.declaration.extension.asSourceNode
 import ru.nsu.convoyeur.core.declaration.graph.SinkNode
-import ru.nsu.convoyeur.core.declaration.graph.asSourceNode
 import kotlin.test.Test
 
 class SimpleBFSExecutionGraphBuilderTest {

@@ -2,6 +2,7 @@ package ru.nsu.convoyeur.examples
 
 import kotlinx.coroutines.delay
 import ru.nsu.convoyeur.api.declaration.graph.SourceGraphNode
+import ru.nsu.convoyeur.core.declaration.extension.asSourceNode
 import ru.nsu.convoyeur.core.declaration.graph.*
 
 /**
