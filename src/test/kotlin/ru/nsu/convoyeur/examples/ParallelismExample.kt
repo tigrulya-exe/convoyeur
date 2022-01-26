@@ -1,54 +1,46 @@
 package ru.nsu.convoyeur.examples
 
-import io.kotest.inspectors.forAllValues
-import kotlinx.coroutines.selects.select
+import kotlinx.coroutines.channels.consumeEach
 import ru.nsu.convoyeur.api.declaration.graph.SourceGraphNode
 import ru.nsu.convoyeur.core.declaration.graph.*
-import kotlin.random.Random
 
 class ParallelismExample : ConvoyeurExample<Int>() {
     override fun getDeclarationGraph(): List<SourceGraphNode<Int>> {
         val sourceNode1 = SourceNode<Int>(
-            "source1_9",
+            "source1",
             parallelism = 3
         ) {
-            generateSequence (parallelIndex + 1) { it + 3}
-                .take(3)
+            (parallelIndex + 1 .. 10 step 3)
                 .forEach { number ->
                     emit(number)
                 }
-            println("[SOURCE] FINISH")
+            println("[SOURCE 1] FINISH")
         }
 
         val sourceNode2 = SourceNode<Int> (
-            "source10_19",
+            "source2",
             parallelism = 2
         ) {
-            generateSequence (parallelIndex + 10) { it + 2}
-                .take(5)
+            (parallelIndex + 10 .. 20 step 2)
                 .forEach { number ->
                     emit(number)
                 }
-            println("[SOURCE] FINISH")
+            println("[SOURCE 2] FINISH")
         }
 
         val mapNode = StatefulTransformNode<Int, String> (
             "randomStringMapper",
-            parallelism = 4
+            parallelism = 2
         ) {
             val charPool : List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
-            select<Unit> {
-                inputChannels()
-                    .forAllValues { channel ->
-                        channel.onReceive { length ->
-                            val randomString = (1..length)
-                                .map { Random.nextInt(0, charPool.size) }
-                                .map(charPool::get)
-                                .joinToString("")
-                            emit(randomString)
-                        }
-                    }
-            }
+            val channelName = "source" + (parallelIndex + 1)
+            inputChannel(channelName)
+                ?.consumeEach { length ->
+                    val randomString = (1..length)
+                        .map(charPool::get)
+                        .joinToString("")
+                    emit( randomString)
+                }
         }
 
         val sinkNode = SinkNode<String> (

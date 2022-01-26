@@ -11,9 +11,8 @@ class LinearGraphExample : ConvoyeurExample<Int>() {
     override fun getDeclarationGraph(): List<SourceGraphNode<Int>> {
         val sourceNode = SourceNode<Int>("source-id") {
             repeat(10) {
-                // send value to channel 'map-id'
-                emit("map-id", it)
-                emit("filter-id", it)
+                // send value to channel 'filter-id'
+                emit(it)
             }
             println("[SOURCE] FINISH")
         }
@@ -29,7 +28,7 @@ class LinearGraphExample : ConvoyeurExample<Int>() {
                 inputChan?.consumeEach {
                     if (it % 2 == 0) {
                         println("[FILTER] Sending to map $it")
-                        emit("sink-id", "Filtered [$it] + state[$someState]")
+                        emit("map-id", "Filtered [$it] + state[$someState]")
                     }
                     someState = (0..1000).random()
                 }
@@ -38,6 +37,7 @@ class LinearGraphExample : ConvoyeurExample<Int>() {
 
         // stateless (except closure variables) transform node (with both inputs and outputs)
         val mapNode = TransformNode<String, String>(
+            "map-id",
             // define buffer sizes of each channel (default is 1)
             bufferSizes = mutableMapOf("source-id" to 2)
         ) { _, value ->
@@ -46,7 +46,6 @@ class LinearGraphExample : ConvoyeurExample<Int>() {
         }
 
         val sinkNode = SinkNode<String>(
-            "sink-id",
             onChannelClose = { println("Channel $it close") }
         ) { channelName, value ->
             println("[SINK] Get value '$value' from channel '$channelName")

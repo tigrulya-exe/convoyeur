@@ -34,7 +34,8 @@ abstract class AbstractExecutionGraphBuilder(
         val context = executionContexts[node.id] as NodeExecutionContext<S, D>
         for (child in node.outputNodes) {
             val childContext = executionContexts[child.id] as NodeExecutionContext<D, Any>
-            val bufferSize = child.bufferSizes.getOrDefault(node.id, DEFAULT_BUFF_SIZE) * child.parallelism
+            val multiplyFactor = child.parallelism * node.parallelism
+            val bufferSize = child.bufferSizes.getOrDefault(node.id, DEFAULT_BUFF_SIZE) * multiplyFactor
             val channel = channelFactory.createChannel<D>(bufferSize)
             context.addOutputChannel(
                 nodeId = child.id,

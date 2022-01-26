@@ -23,7 +23,7 @@ abstract class ConvoyeurExample<S>(
     fun execute() {
         graphBuilders.forEach {
             try {
-                logger.info("Test with ${it.javaClass}")
+                println("\nTest with ${it.javaClass}\n")
                 DefaultExecutionManager(it).execute(
                     getDeclarationGraph()
                 )

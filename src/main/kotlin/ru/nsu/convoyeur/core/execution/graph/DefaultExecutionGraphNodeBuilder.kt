@@ -36,16 +36,26 @@ class DefaultExecutionGraphNodeBuilder : ExecutionGraphNodeBuilder {
     private fun <S, D> createParallelAction(
         node: GraphNode<S, D>,
         context: MutableExecutionContext<S, D>
-    ): ContextEnrichedAction = { coroutineScope ->
-        (0 until node.parallelism)
-            .forEach { index ->
-                coroutineScope.launch {
-                    enrichActionWithContext(
-                        node,
-                        (context as NodeExecutionContext<S, D>).copy(parallelIndex = index)
+    ): ContextEnrichedAction {
+        context as NodeExecutionContext<S, D>
+        val actions = (0 until node.parallelism)
+            .map { index ->
+                enrichActionWithContext(
+                    node,
+                    NodeExecutionContext(
+                        context.inputChannels,
+                        context.outputChannels,
+                        context.isActiveAtomic,
+                        context.inputCycleChannelIds,
+                        index
                     )
-                }
+                )
             }
+        return { coroutineScope ->
+            actions.map { action ->
+                coroutineScope.launch { action(coroutineScope) }
+            }.forEach { it.join() }
+        }
     }
 
     private fun <S, D> enrichActionWithContext(
