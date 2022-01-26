@@ -24,7 +24,7 @@ interface MutableConsumerExecutionContext<V> : ConsumerExecutionContext<V>, Muta
      * Key - next cycle node id (output channel),
      * value - previous cycle node id (input channel)
      */
-    var inputCycleChannelIds: MutableMap<String, String>
+    val inputCycleChannelIds: MutableMap<String, String>
 
     fun addInputChannel(nodeId: String, channel: ReceiveChannel<V>) {
         inputChannels[nodeId] = channel

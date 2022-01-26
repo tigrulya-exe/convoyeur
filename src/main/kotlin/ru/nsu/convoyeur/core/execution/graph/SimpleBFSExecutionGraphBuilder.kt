@@ -38,7 +38,6 @@ class SimpleBFSExecutionGraphBuilder(
         val traverseQueue = LinkedHashSet<GraphNode<*, *>>(sources)
 
         while (traverseQueue.isNotEmpty()) {
-            println(traverseQueue.map { node -> node.id })
             val node = traverseQueue.pop()
 
             traverseQueue.addAll(
