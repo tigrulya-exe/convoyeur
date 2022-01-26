@@ -2,7 +2,7 @@ package ru.nsu.convoyeur.examples
 
 import io.kotest.inspectors.forAllValues
 import kotlinx.coroutines.selects.select
-import ru.nsu.convoyeur.api.declaration.SourceGraphNode
+import ru.nsu.convoyeur.api.declaration.graph.SourceGraphNode
 import ru.nsu.convoyeur.core.declaration.graph.*
 import kotlin.random.Random
 

@@ -1,6 +1,6 @@
 package ru.nsu.convoyeur.examples
 
-import ru.nsu.convoyeur.api.declaration.SourceGraphNode
+import ru.nsu.convoyeur.api.declaration.graph.SourceGraphNode
 import ru.nsu.convoyeur.core.declaration.graph.SinkNode
 import ru.nsu.convoyeur.core.declaration.graph.TransformNode
 import ru.nsu.convoyeur.core.declaration.graph.asSourceNode

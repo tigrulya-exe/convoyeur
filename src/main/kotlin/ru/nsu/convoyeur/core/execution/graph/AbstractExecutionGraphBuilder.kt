@@ -1,10 +1,9 @@
 package ru.nsu.convoyeur.core.execution.graph
 
-import kotlinx.coroutines.channels.SendChannel
 import ru.nsu.convoyeur.api.channel.ChannelFactory
 import ru.nsu.convoyeur.api.channel.ChannelFactory.Companion.DEFAULT_BUFF_SIZE
-import ru.nsu.convoyeur.api.declaration.GraphNode
-import ru.nsu.convoyeur.api.declaration.SourceGraphNode
+import ru.nsu.convoyeur.api.declaration.graph.GraphNode
+import ru.nsu.convoyeur.api.declaration.graph.SourceGraphNode
 import ru.nsu.convoyeur.api.execution.context.MutableExecutionContext
 import ru.nsu.convoyeur.api.execution.graph.ExecutionGraphNode
 import ru.nsu.convoyeur.api.execution.graph.transform.ExecutionGraphBuilder

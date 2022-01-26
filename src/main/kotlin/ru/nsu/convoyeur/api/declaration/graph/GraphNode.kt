@@ -1,4 +1,4 @@
-package ru.nsu.convoyeur.api.declaration
+package ru.nsu.convoyeur.api.declaration.graph
 
 import ru.nsu.convoyeur.api.execution.context.ExecutionContext
 

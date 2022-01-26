@@ -1,8 +1,8 @@
 package ru.nsu.convoyeur.core.execution.graph
 
 import ru.nsu.convoyeur.api.channel.ChannelFactory
-import ru.nsu.convoyeur.api.declaration.GraphNode
-import ru.nsu.convoyeur.api.declaration.SourceGraphNode
+import ru.nsu.convoyeur.api.declaration.graph.GraphNode
+import ru.nsu.convoyeur.api.declaration.graph.SourceGraphNode
 import ru.nsu.convoyeur.api.execution.context.MutableExecutionContext
 import ru.nsu.convoyeur.api.execution.graph.ExecutionGraphNode
 import ru.nsu.convoyeur.api.execution.graph.transform.ExecutionGraphNodeBuilder

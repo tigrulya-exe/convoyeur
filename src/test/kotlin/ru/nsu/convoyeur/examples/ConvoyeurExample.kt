@@ -1,7 +1,7 @@
 package ru.nsu.convoyeur.examples
 
 import kotlinx.coroutines.runBlocking
-import ru.nsu.convoyeur.api.declaration.SourceGraphNode
+import ru.nsu.convoyeur.api.declaration.graph.SourceGraphNode
 import ru.nsu.convoyeur.api.execution.graph.transform.ExecutionGraphBuilder
 import ru.nsu.convoyeur.core.execution.DefaultExecutionManager
 import ru.nsu.convoyeur.core.execution.graph.CycleDetectingExecutionGraphBuilder
@@ -34,7 +34,7 @@ abstract class ConvoyeurExample<S>(
     }
 
     @Test
-    fun executeSimpleExampleAsync() = runBlocking {
+    fun executeAsync() = runBlocking {
         graphBuilders.forEach {
             logger.info("Test with ${it.javaClass}")
 

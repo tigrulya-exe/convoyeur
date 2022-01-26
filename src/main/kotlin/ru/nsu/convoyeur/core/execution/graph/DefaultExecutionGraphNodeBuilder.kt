@@ -1,11 +1,9 @@
 package ru.nsu.convoyeur.core.execution.graph
 
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.selects.select
-import ru.nsu.convoyeur.api.declaration.GraphNode
-import ru.nsu.convoyeur.api.declaration.StatefulGraphNode
-import ru.nsu.convoyeur.api.declaration.StatelessConsumerNode
+import ru.nsu.convoyeur.api.declaration.graph.GraphNode
+import ru.nsu.convoyeur.api.declaration.graph.StatefulGraphNode
+import ru.nsu.convoyeur.api.declaration.graph.StatelessConsumerNode
 import ru.nsu.convoyeur.api.execution.context.ConsumerExecutionContext
 import ru.nsu.convoyeur.api.execution.context.ExecutionContext
 import ru.nsu.convoyeur.api.execution.context.MutableExecutionContext
@@ -13,6 +11,7 @@ import ru.nsu.convoyeur.api.execution.graph.ContextEnrichedAction
 import ru.nsu.convoyeur.api.execution.graph.ExecutionGraphNode
 import ru.nsu.convoyeur.api.execution.graph.transform.ExecutionGraphNodeBuilder
 import ru.nsu.convoyeur.core.execution.context.NodeExecutionContext
+import ru.nsu.convoyeur.util.getFirstChannelValue
 
 class DefaultExecutionGraphNodeBuilder : ExecutionGraphNodeBuilder {
     override fun <S, D> build(
@@ -37,7 +36,7 @@ class DefaultExecutionGraphNodeBuilder : ExecutionGraphNodeBuilder {
     private fun <S, D> createParallelAction(
         node: GraphNode<S, D>,
         context: MutableExecutionContext<S, D>
-    ) : ContextEnrichedAction = { coroutineScope ->
+    ): ContextEnrichedAction = { coroutineScope ->
         (0 until node.parallelism)
             .forEach { index ->
                 coroutineScope.launch {
@@ -52,8 +51,8 @@ class DefaultExecutionGraphNodeBuilder : ExecutionGraphNodeBuilder {
     private fun <S, D> enrichActionWithContext(
         node: GraphNode<S, D>,
         context: MutableExecutionContext<S, D>
-    ): ContextEnrichedAction = {
-        when (node) {
+    ): ContextEnrichedAction {
+        return when (node) {
             is StatefulGraphNode<S, D, *> -> wrapStatefulAction(node, context)
             is StatelessConsumerNode<S, D, *> -> wrapStatelessAction(node, context)
             else -> throw RuntimeException("Maybe turn GraphNode to sealed class?")
@@ -63,7 +62,7 @@ class DefaultExecutionGraphNodeBuilder : ExecutionGraphNodeBuilder {
     private fun <E : ExecutionContext, S, D> wrapStatefulAction(
         node: StatefulGraphNode<S, D, E>,
         context: MutableExecutionContext<S, *>,
-    ): ContextEnrichedAction =  {
+    ): ContextEnrichedAction = {
         node.action(context as E)
     }
 
@@ -74,15 +73,10 @@ class DefaultExecutionGraphNodeBuilder : ExecutionGraphNodeBuilder {
         val openChannelKeys = HashSet(context.inputChannels.keys)
         with(context as E) {
             while (isActive && openChannelKeys.isNotEmpty()) {
-                val channelNameValue = select<Pair<String, S?>> {
+                val channelNameValue = getFirstChannelValue(
                     context.inputChannels
                         .filter { it.key in openChannelKeys }
-                        .forEach {
-                            it.value.onReceiveCatching { result ->
-                                it.key to result.getOrNull()
-                            }
-                        }
-                }
+                )
 
                 if (channelNameValue.second == null) {
                     openChannelKeys.remove(channelNameValue.first)
@@ -97,7 +91,7 @@ class DefaultExecutionGraphNodeBuilder : ExecutionGraphNodeBuilder {
 
     private fun <S> checkCycleNodes(context: MutableExecutionContext<S, *>, openInputChannelKeys: Set<String>) {
         val openNonCycleChannelKeys = openInputChannelKeys - context.inputCycleChannelIds.values.toSet()
-        if(openNonCycleChannelKeys.isNotEmpty()) {
+        if (openNonCycleChannelKeys.isNotEmpty()) {
             return
         }
         context.outputChannels
