@@ -51,7 +51,7 @@ class SeveralSourcesExample : ConvoyeurExample<Int>() {
         ) { channelName, value ->
             println("[SINK] Get value '$value' from channel '$channelName")
             // check backpressure
-            delay(400)
+            delay(200)
         }
 
         val sinkNode2 = SinkNode<String>(

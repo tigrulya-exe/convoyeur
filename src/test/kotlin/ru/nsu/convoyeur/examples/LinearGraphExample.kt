@@ -14,26 +14,21 @@ class LinearGraphExample : ConvoyeurExample<Int>() {
                 // send value to channel 'filter-id'
                 emit(it)
             }
-            println("[SOURCE] FINISH")
         }
 
         // stateful transform node
-        val filterNode = StatefulTransformNode<Int, String>(
-            id = "filter-id",
-            action = {
-                // in such nodes we can use
-                var someState = 0
-                // get input channel by name
-                val inputChan = inputChannel("source-id")
-                inputChan?.consumeEach {
-                    if (it % 2 == 0) {
-                        println("[FILTER] Sending to map $it")
-                        emit("map-id", "Filtered [$it] + state[$someState]")
-                    }
-                    someState = (0..1000).random()
+        val filterNode = StatefulTransformNode<Int, String>("filter-id") {
+            // in such nodes we can use
+            var someState = 0
+            // get input channel by name
+            val inputChan = inputChannel("source-id")
+            inputChan?.consumeEach {
+                if (it % 2 == 0) {
+                    emit("map-id", "Filtered [$it] + state[$someState]")
                 }
-                println("[FILTER] FINISH")
-            })
+                someState = (0..1000).random()
+            }
+        }
 
         // stateless (except closure variables) transform node (with both inputs and outputs)
         val mapNode = TransformNode<String, String>(
