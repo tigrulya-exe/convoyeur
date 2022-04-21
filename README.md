@@ -4,6 +4,10 @@ Convoyeur is a simple framework for data pipelines processing.
 
 [Presentation with main framework features (in russian)](https://docs.google.com/presentation/d/1HkRfrlQrwQb7xZ4_6zdGLWVPhAbmxuTFSo7Xd8VXbww/edit?usp=sharing).
 
+## Installation
+[![](https://jitpack.io/v/tigrulya-exe/convoyeur.svg)](https://jitpack.io/#tigrulya-exe/convoyeur)<br>
+[Maven/Gradle import instructions](https://jitpack.io/#tigrulya-exe/convoyeur) 
+
 ## DeclarationGraph API
 
 Convoyeur provides flexible API for constructing data processing graph:
